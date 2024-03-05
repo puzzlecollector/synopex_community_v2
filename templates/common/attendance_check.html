@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<head>
+        <title>출석체크</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/main.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/daygrid/main.min.css" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/main.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/daygrid/main.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/locales/ko.js"></script>
+        <style>
+        /* Your custom styles */
+        .attendance-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .summary-table {
+            margin-bottom: 30px;
+        }
+
+        .calendar {
+            margin-bottom: 30px;
+            /* Additional styling for the calendar */
+        }
+
+        .check-in-btn {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 20px;
+            background-color: #3897f0;
+            color: white;
+            border: none;
+            margin-top: 30px;
+        }
+
+        .check-in-btn:hover {
+            background-color: #2878b5;
+        }
+
+        /* Additional styles */
+        </style>
+    </head>
+<div class="container attendance-container mt-5">
+    <h2 class="text-center">출석체크</h2>
+    <!-- Summary Table -->
+    <table class="table summary-table table-bordered">
+        <thead class="thead-light">
+            <tr>
+                <th>최초 회원가입일</th>
+                <th>가입 후 일수</th>
+                <th>출석체크 횟수</th>
+                <th>현재 계급</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ attendance_summary.initial_registration_date|date:"Y년 m월 d일" }}</td>
+                <td>{{ attendance_summary.days_since_registration }}</td>
+                <td>{{ attendance_summary.days_checked }}</td>
+                <td>{{ attendance_summary.points_from_attendance }}</td>
+            </tr>
+        </tbody>
+    </table>
+    <!-- Calendar -->
+    <div id="calendar" class="calendar"></div>
+    <!-- Check-in Button -->
+    {% if not already_checked_in %}
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn check-in-btn">출석체크</button>
+    </form>
+    {% else %}
+    <button disabled class="btn check-in-btn">오늘 이미 출석체크 완료</button>
+    {% endif %}
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/main.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/daygrid/main.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/locales/ko.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var checkedInDates = {{ checked_in_dates|safe }};
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            plugins: ['dayGrid'],
+            defaultView: 'dayGridMonth',
+            locale: 'ko',
+            header: {
+                left: '',
+                center: 'title',
+                right: ''
+            },
+            footer: false,
+            navLinks: false,
+            editable: false,
+            events: checkedInDates.map(function(date) {
+                return {
+                    title: '✅',
+                    start: date,
+                    allDay: true
+                };
+            })
+        });
+
+        calendar.render();
+    });
+</script>
+{% endblock %}

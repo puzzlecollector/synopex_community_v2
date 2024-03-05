@@ -1,0 +1,801 @@
+{% extends "base.html" %}
+{% load static %}
+{% load aiphabtc_filter %}
+{% load humanize %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+<style>
+    a {
+        text-decoration: none; /* Remove underline */
+        color: #007bff; /* Bootstrap default blue color for links */
+    }
+    .news-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .news-row {
+        display: table-row;
+    }
+    .news-cell {
+        display: table-cell;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        position: relative; /* for tooltip positioning */
+        text-align: center; /* Center text within the cell */
+    }
+    .title-cell {
+        font-weight: bold;
+        color: #333;
+        cursor: help; /* indicates that a tooltip is available */
+    }
+    .datetime-cell {
+        color: #666;
+        font-size: 0.9em;
+    }
+    /* Tooltip styling */
+    .title-cell:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%; /* Start from the middle of the cell */
+        transform: translateX(-50%); /* Center the tooltip */
+        bottom: 100%; /* Position above the title */
+        margin-bottom: 10px; /* Lift the tooltip up */
+        background-color: #333;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-size: 0.9em;
+        z-index: 10;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        max-width: 400px;
+        white-space: normal;
+        text-align: left;
+        overflow-y: auto;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        opacity: 0;
+        visibility: hidden;
+    }
+    .title-cell:hover::after {
+        opacity: 1;
+        visibility: visible;
+    }
+    .sentiment-scores {
+        margin: 20px 0;
+    }
+
+    .sentiment-score {
+        background-color: #f2f2f2;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 10px;
+    }
+
+    .sentiment-bar {
+        height: 20px;
+        background-color: #4caf50;
+        transition: width 0.3s ease;
+    }
+
+    .sentiment-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-weight: bold;
+    }
+
+    .voting-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 300px; /* Adjust based on your needs */
+    }
+
+    .voting-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,.1);
+        margin-top: 20px;
+    }
+
+    .voting-container form {
+        width: 100%;
+    }
+
+    .voting-container .form-check {
+        margin: 10px 0;
+    }
+
+    .voting-container .form-check-input {
+        cursor: pointer;
+    }
+
+    .voting-container .form-check-label {
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .voting-container button[type="submit"] {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .tradingview-widgets {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .tradingview-widget-container {
+        flex: 1; /* Each container takes equal width */
+        margin: 0 10px; /* Add some space between the widgets */
+        height: 350px;
+    }
+
+    .investment-calendar-container {
+        text-align: center;
+        margin: 20px auto;
+        max-width: 650px; /* Adjust based on your layout's max width */
+    }
+
+    .investment-calendar-container iframe {
+        width: 100%;
+        border: none; /* Remove border */
+        margin-bottom: 10px; /* Space between iframe and attribution */
+    }
+
+    .poweredBy {
+        font-size: 0.9rem;
+        color: #666;
+        text-align: center;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mt-4" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div class="row">
+        <div class="col-lg-6">
+            <h3>비트코인 시황 대시보드</h3>
+            <hr>
+            <!-- Dashboard content here -->
+            <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <a href="https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"><img src="{% static 'upbit.png' %}" alt="settings" style="height:20px; margin-right: 5px;">UPbit</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <a href="https://www.bybit.com/en/"><img src="{% static 'bybit.png' %}" alt="settings" style="height:20px; margin-right: 5px;">Bybit</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <a href="https://www.okx.com/join/36629823?gad_source=1&gclid=CjwKCAiAloavBhBOEiwAbtAJOyJGUidiYHP3emtf_Xz4vot1pz6rxj_NTJhrLR6kU2-Ftpo08BysNBoCO_MQAvD_BwE"><img src="{% static 'okx.png' %}" alt="settings" style="height:20px; margin-right: 5px;">OKX</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <a href="https://www.mexc.com/ko-KR"><img src="{% static 'mexc.png' %}" alt="settings" style="height:20px; margin-right: 5px;">MEXC</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <a href="https://www.pionex.com/en/"><img src="{% static 'pionex.png' %}" alt="settings" style="height:20px; margin-right: 5px;">Pionex</a>
+                </button>
+            </div>
+            <br>
+            <!-- TradingView Widget -->
+            <div class="tradingview-widget-container">
+                  <div class="tradingview-widget-container__widget" style="height:400px;width:100%">
+                      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                          {
+                              "autosize": false,
+                              "symbol": "UPBIT:BTCKRW",
+                              "interval": "D",
+                              "timezone": "Etc/UTC",
+                              "theme": "light",
+                              "style": "1",
+                              "locale": "en",
+                              "toolbar_bg": "#f1f3f6",
+                              "enable_publishing": false,
+                              "allow_symbol_change": true,
+                              "studies": [
+                                "STD;RSI"
+                              ],
+                              "container_id": "tradingview_3e3e3"
+                          }
+                      </script>
+                  </div>
+            </div>
+            <br><br>
+            <div style="text-align: left; margin-top: 10px; margin-botton: 10px;">
+                <button id="fetchTechnicalAIResponse" class="btn btn-primary">AI 일봉 추세 분석 보기</button>
+                <div id="TechnicalLoading" style="display:none;">AI가 분석중... 시간이 조금만 기다려주세요!</div>
+            </div>
+            <!-- GPT 일봉 추세 분석 -->
+            <p id="TechnicalAIResponse">{{ technical_chat_message }}</p>
+            <hr style="height: 3px; background-color: green;">
+            <p>
+                <a href="https://www.coinness.com" target="_blank" style="text-decoration: none; color: inherit;">
+                    <img src="{% static 'coinness.png' %}" alt="Coinness Icon" style="vertical-align: middle; margin-right: 5px; height: 30px;">
+                </a>
+                <strong>코인니스 최신 속보</strong>
+                <div class="d-flex justify-content-center">
+                    <div class="news-table w-100">
+                        <div class="loading-indicator" style="display: none; text-align: center;">최신 속보를 읽어오는 중입니다... 조금만 기다려주세요!</div>
+                        {% for item in scraped_data %}
+                            <div class="news-row">
+                                <div class="news-cell title-cell" data-tooltip="{{ item.contents }}">
+                                    <span class="news-title">{{ item.titles }}</span>
+                                </div>
+                                <div class="news-cell datetime-cell">
+                                    <span class="news-datetime">{{ item.datetimes|date:"Y-m-d H:i" }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <small>더 다양한 미디어 소스에서 최신 코인 시장 뉴스를 확인해보세요!</small>
+                <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
+                    <button type="button" class="btn btn-outline-secondary btn-sm">
+                        <a href="https://www.tokenpost.kr/"><img src="{% static 'tokenpost.png' %}" alt="settings" style="height:30px; margin-right: 5px;">토큰포스트</a>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm">
+                        <a href="https://www.blockmedia.co.kr/"><img src="{% static 'blockmedia.png' %}" alt="settings" style="height:30px; margin-right: 5px;">블록미디어</a>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm">
+                        <a href="https://bloomingbit.io/?tab=real"><img src="{% static 'bloomingbit.png' %}" alt="settings" style="height:30px; margin-right: 5px;">블루밍비트</a>
+                    </button>
+                </div>
+                <p><strong> 딥러닝 언어모델 비트코인 감성 점수 </strong></p>
+                <small>최근 코인니스 속보들이 비트코인 가격에 얼만큼 호재, 악재, 중립성을 띄고 있는지 CryptoDeBERTa 언어모델이 분석한 결과입니다. 알파비트 인공지능 연구팀이 개발한 감성분류 언어모델을 기반으로 수치가 계산되었습니다.</small>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                        <a href="https://huggingface.co/LDKSolutions/KR-cryptodeberta-v2-base"><img src="{% static 'huggingface.png' %}" alt="settings" style="height:40px; margin-right: 5px;">알파비트 크립토 언어모델</a>
+                </button>
+                <div class="sentiment-scores">
+                    {% for score in avg_sentiment_scores_percentage %}
+                        <div class="sentiment-score">
+                            <span class="sentiment-label">{{ sentiment_labels|get_item:forloop.counter0 }}:</span>
+                            <div class="sentiment-bar" style="width: {{ score }}%;"></div>
+                            <span class="sentiment-text" style="color: black;">{{ score|floatformat:2 }}%</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </p>
+            <hr style="height: 3px; background-color: green;">
+            <p>
+                <strong>크립토 공포 탐욕 지수</strong>
+                <span class="tooltip-question-mark" data-toggle="tooltip" data-html="true" title="크립토 공포와 탐욕 지수는 투자자들의 시장에 대한 감정을 나타내는 지표 중 하나로 사용됩니다. 이 지수는 0에서 100 사이의 값을 가지며, 0에 가까울수록 투자자들이 두려움을 느끼고 있음을, 100에 가까울수록 탐욕적임을 나타냅니다. 이 지수는 주로 시장의 극단적인 감정 상태를 포착해 반대 방향으로의 변화를 예측하는데 사용됩니다. 지수가 탐욕으로 옮겨가면 비트코인 가격이 오를 가능성이 있지만, 이는 또한 가격이 과열되어 조정을 받을 수 있는 시점에 접어들 수 있음을 의미합니다.">[?]</span>
+                <p>비트코인 및 기타 대형 암호화폐를 위한 최근 7일동안의 공포 탐욕 지수입니다 <a href="https://alternative.me/crypto/fear-and-greed-index/">[참고]</a></p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Value</th>
+                            <th>Value Classification</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in data_fng %}
+                        <tr>
+                            <td>{{ row.timestamp }}</td>
+                            <td>{{ row.value }}</td>
+                            <td>{{ row.value_classification }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </p>
+            <hr style="height: 3px; background-color: green;">
+            <p>
+                <strong>글로벌 크립토 시장 정보</strong>
+                <p>암호화폐 시장의 전반적인 정보입니다 <a href="https://www.coinlore.com/ko/cryptocurrency-data-api">[참고]</a></p>
+                <table class="table">
+                    {% for row in data_global %}
+                        <tr>
+                            <th>코인 수</th>
+                            <td>{{ row.coins_count|intcomma }}</td>
+                        </tr>
+                        <tr>
+                            <th>활성 시장</th>
+                            <td>{{ row.active_markets|intcomma }}</td>
+                        </tr>
+                        <tr>
+                            <th>시가 총액 ($)</th>
+                            <td>{{ row.total_mcap |floatformat:2 |intcomma }}</td>
+                        </tr>
+                        <tr>
+                            <th>총 거래량 ($)</th>
+                            <td>{{ row.total_volume |floatformat:2 |intcomma }}</td>
+                        </tr>
+                        <tr>
+                            <th>시가 총액 변화 (%)</th>
+                            <td class="{% if row.mcap_change|to_float >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {% if row.mcap_change|to_float >= 0 %}+{% endif %}{{ row.mcap_change|floatformat:2 }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>거래량 변화 (%)</th>
+                            <td class="{% if row.volume_change|to_float >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {% if row.volume_change|to_float >= 0 %}+{% endif %}{{ row.volume_change|floatformat:2 }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <div class="tradingview-widgets">
+                    <div class="tradingview-widget-container">
+                        <h5>BTC 도미넌스</h5>
+                        <!-- TradingView Widget BEGIN -->
+                        <div class="tradingview-widget-container" style="height:100%;width:100%">
+                              <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+                              <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                  {
+                                      "autosize": true,
+                                      "symbol": "CRYPTOCAP:BTC.D",
+                                      "interval": "D",
+                                      "timezone": "Etc/UTC",
+                                      "theme": "light",
+                                      "style": "1",
+                                      "locale": "en",
+                                      "enable_publishing": false,
+                                      "allow_symbol_change": true,
+                                      "calendar": false,
+                                      "support_host": "https://www.tradingview.com"
+                                  }
+                              </script>
+                        </div>
+                        <!-- TradingView Widget END -->
+                    </div>
+                    <div class="tradingview-widget-container">
+                        <h5>ETH 도미넌스</h5>
+                        <!-- TradingView Widget BEGIN -->
+                        <div class="tradingview-widget-container" style="height:100%;width:100%">
+                              <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+                              <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                  {
+                                      "autosize": true,
+                                      "symbol": "CRYPTOCAP:ETH.D",
+                                      "interval": "D",
+                                      "timezone": "Etc/UTC",
+                                      "theme": "light",
+                                      "style": "1",
+                                      "locale": "en",
+                                      "enable_publishing": false,
+                                      "allow_symbol_change": true,
+                                      "calendar": false,
+                                      "support_host": "https://www.tradingview.com"
+                                  }
+                              </script>
+                        </div>
+                        <!-- TradingView Widget END -->
+                    </div>
+                </div>
+                <br><br>
+                <div>
+                    <strong>시장 상관관계 분석</strong>
+                    <p>최근 30일간 BTC-KRW와 NAS100의 가격 변동 상관관계:</p>
+                    <ul>
+                        <li><strong>피어슨 상관계수 (Pearson):</strong> {{ pearson|floatformat:2 }}</li>
+                        <li><strong>스피어만 상관계수 (Spearman):</strong> {{ spearman|floatformat:2 }}</li>
+                        <li><strong>켄달 상관계수 (Kendall's Tau):</strong> {{ kendall|floatformat:2 }}</li>
+                    </ul>
+                    <p>값이 1이나 -1에 가까울수록 강한 양 또는 음의 상관관계를 의미합니다. 상관계수 값이 -100인 경우 데이터를 가져오는데 문제가 발생했음을 의미합니다.</p>
+                </div>
+            </p>
+            <hr style="height: 3px; background-color: green;">
+            <p>
+                <strong>김치 프리미엄 정보</strong>
+                <span class="tooltip-question-mark" data-toggle="tooltip" data-html="true" title="김치 프리미엄이란 용어는 한국의 암호화폐 가격이 해외 거래소의 가격보다 높을 때 사용됩니다. 김프가 높다는 것은 해외 거래소에서 상장된 코인의 가격이 한국 내에서 거래되는 가격보다 상대적으로 저렴하다는 의미입니다.">[?]</span>
+                <p>코인베이스와 업비트에서 가져온 BTC 가격 정보로 계산된 수치입니다 (코인베이스/업비트 프리미엄)</p>
+                <table class="table">
+                    <tr>
+                        <th>현재 시간</th>
+                        <td>{{ kimchi_data.current_time }}</td>
+                    </tr>
+                    <tr>
+                        <th>USD/KRW</th>
+                        <td>{{ kimchi_data.now_usd_krw |floatformat:2 |intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <th>BTC 가격 (KRW)</th>
+                        <td>{{ kimchi_data.now_upbit_price |floatformat:2 |intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <th>BTC 가격 (USDT)</th>
+                        <td>{{ kimchi_data.now_bitget_price |floatformat:2 |intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <th>BTC 김프 (%)</th>
+                        <td class="{% if kimchi_data.kp|to_float >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if kimchi_data.kp|to_float >= 0 %}+{% endif %}{{ kimchi_data.kp |floatformat:2 }}
+                        </td>
+                    </tr>
+                </table>
+            </p>
+            <div class="investment-calendar-container my-4">
+                <h3>경제 캘린더</h3>
+                <iframe src="https://sslecal2.investing.com?borderColor=%2310b316&columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone&countries=5,4,72,14,35,37,6,122,11,39&calType=week&timeZone=88&lang=18" width="650" height="300" frameborder="0" allowtransparency="true" marginwidth="0" marginheight="0"></iframe>
+                <div class="poweredBy" style="font-family: Arial, Helvetica, sans-serif;">
+                    <span style="font-size: 11px;color: #333333;text-decoration: none;">외환 포털 <a href="https://kr.Investing.com/" rel="nofollow" target="_blank" style="font-size: 11px;color: #06529D; font-weight: bold;" class="underline_link">Investing.com 한국어</a>.</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <h3>커뮤니티 게시판</h3>
+            <hr>
+            <small>공부를 위해 더 다양한 커뮤니티도 참고해보세요</small>
+            <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'coinpickle.png' %}" alt="coinpickle Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://web.coinpickle.net/">coinpickle</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'coinpan.png' %}" alt="coinpan Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://coinpan.com/">coinpan</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'coinglass.png' %}" alt="coinglass Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://www.coinglass.com/LongShortRatio">coinglass</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'coinness.png' %}" alt="coinness Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://coinness.com/community/lounge?category=8">coinness</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'coinsect.png' %}" alt="coinsect Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://coinsect.io/">coinsect</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'sigbtc.png' %}" alt="sigbtc Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://sigbtc.pro/derivatives">sigbtc</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'kucoin_learn.png' %}" alt="kucoin Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://www.kucoin.com/ko/learn">쿠코인 교육</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'mexc.png' %}" alt="MEXC Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://www.mexc.com/ko-KR/learn">MEXC 튜토리얼</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'binance_academy.png' %}" alt="binance academy Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://academy.binance.com/en/courses/all">Binance 아카데미</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'coingecko.png' %}" alt="coingecko Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://www.coingecko.com/">CoinGecko</a>
+                </button>
+            </div>
+            <br>
+            <small>더 많은 정보를 위해 텔레그램 커뮤니티도 참고해보세요</small>
+            <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'telegram.png' %}" alt="byun Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://t.me/whaleliq">실시간 고래 청산 내역</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'telegram.png' %}" alt="whalealert Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://t.me/whalealertkorean">실시간 고래 입출금 알람</a>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">
+                    <img src="{% static 'telegram.png' %}" alt="goldenstick Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://t.me/GDSTofficial">골든스틱</a>
+                </button>
+            </div>
+            <br>
+            <div class="row">
+                {% for board, posts in board_posts.items %}
+                <div class="col-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5>
+                                {% if board.name == 'free_board' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'free_board' %}">자유게시판</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="자유롭게 아무 주제에 대한 글을 작성해주세요">[?]</span>
+                                {% elif board.name == 'AI' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'AI' %}">인공지능</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="인공지능과 어떻게 머신러닝, 딥러닝을 코인 트레이딩에 접목시킬 수 있는지에 관한 정보글을 공유하는 곳입니다">[?]</span>
+                                {% elif board.name == 'general_qa' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'general_qa' %}">질문과 답변</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="암호화폐 시장에 관련된 질문과 답변을 해주시면 됩니다">[?]</span>
+                                {% elif board.name == 'trading' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'trading' %}">트레이딩</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="암호화폐 트레이딩에 관련된 정보를 공유하는 곳입니다">[?]</span>
+                                {% elif board.name == 'perceptive_board' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'perceptive_board' %}">관점공유 게시판</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="비트코인 및 업비트에 상장된 알트코인에 대한 관점을 제공해주고 해당 관점이 맞는지 틀렸는지에 따라 추가 포인트 보상을 받을 수 있습니다">[?]</span>
+                                {% elif board.name == 'blockchain' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'blockchain' %}">블록체인</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="블록체인 기술에 관련된 정보를 공유하는 곳입니다">[?]</span>
+                                {% elif board.name == 'economics' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'economics' %}">경제 및 시황</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="최근 경제와 시황이 어떻게 비트코인과 암호화폐에 영향을 미칠지에 대해 논의하고 경제 공부와 정보공유를 하는 곳입니다">[?]</span>
+                                {% elif board.name == 'creator_reviews' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'creator_reviews' %}">방송과 책 리뷰</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="코인 방송 크리에이터와 관련 서적에 관한 리뷰 및 정보를 공유하는 곳입니다">[?]</span>
+                                {% else %}
+                                {{ board.name }}
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for post in posts %}
+                            <li class="list-group-item">
+                                <a href="{% url 'aiphabtc:detail' post.id %}">
+                                    {{ post.subject }}
+                                </a>
+                                <span class="badge bg-info float-end">{{ post.create_date|date:"Y-m-d" }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">No posts yet</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div>
+                <strong>비트코인에 대해서 어떻게 생각하시나요?</strong>
+                <div class="voting-container">
+                    <form id="sentimentVoteForm" action="{% url 'aiphabtc:submit_sentiment_vote' %}" method="post">
+                        {% csrf_token %}
+                        {% for option in sentiment_voting_options %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sentimentVoteOption" id="sentimentVoteOption{{ option.id }}" value="{{ option.id }}">
+                            <label class="form-check-label" for="sentimentVoteOption{{ option.id }}">
+                                {{ option.name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary btn-block">Submit Vote</button>
+                    </form>
+                </div>
+                <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#sentimentResults" aria-expanded="false" aria-controls="sentimentResults">
+                    유저 누적 투표 결과 보기 (%)
+                </button>
+                <div class="collapse" id="sentimentResults">
+                    <div class="card card-body">
+                        <canvas id="sentimentPieChart"></canvas> <!-- Canvas for Chart.js -->
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <h3>머신러닝 비트코인 가격 예측 지표</h3>
+            <p>업비트 차트를 기반으로 가벼운 머신러닝 예측을 수행했습니다. 다양한 시간대를 포함한 보다 <strong>강력한</strong> 머신러닝 지표와 투자 봇에 대해서는 아래 페이지들을 참조해 주세요!</p>
+            <p><a href="#">➡️알파비트 인공지능 및 통계기반 비트코인 투자봇 지표📈📈 (coming soon)</a></p>
+            <p><a href="#">➡️알파비트 인공지능 기반 비트코인 패턴매칭 지표📈📈 (coming soon)</a></p>
+            <p>
+                <h5>단기 방향성 예측 지표</h5>
+                <small>오늘 오전 9시 종가를 기준으로 내일 오전 9시 종가 방향성의 확률을 예측합니다. 튜닝이 되지 않은 가벼운 모델이니 참고만 해주세요. "내린다" 또는 "오른다" 위에 마우스를 올리면 모델이 예측한 각각의 확률을 볼 수 있습니다.</small>
+                <br>
+                <div class="my-4 p-3 bg-light rounded">
+                    <h5 class="mb-3">XGBoost 예측</h5>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ xgb_short|floatformat:2 }}%;" aria-valuenow="{{ xgb_short|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="내린다 {{ xgb_short|floatformat:2 }}%">내린다</div>
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ xgb_long|floatformat:2 }}%;" aria-valuenow="{{ xgb_long|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="오른다 {{ xgb_long|floatformat:2 }}%">오른다</div>
+                    </div>
+                </div>
+                <div class="my-4 p-3 bg-light rounded">
+                    <h5 class="mb-3">LightGBM 예측</h5>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ lgb_short|floatformat:2 }}%;" aria-valuenow="{{ lgb_short|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="내린다 {{ lgb_short|floatformat:2 }}%">내린다</div>
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ lgb_long|floatformat:2 }}%;" aria-valuenow="{{ lgb_long|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="오른다 {{ lgb_long|floatformat:2 }}%">오른다</div>
+                    </div>
+                </div>
+                <div class="my-4 p-3 bg-light rounded">
+                    <h5 class="mb-3">RandomForest 예측</h5>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ rf_short|floatformat:2 }}%;" aria-valuenow="{{ rf_short|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="내린다 {{ rf_short|floatformat:2 }}%">내린다</div>
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ rf_long|floatformat:2 }}%;" aria-valuenow="{{ rf_long|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="오른다 {{ rf_long|floatformat:2 }}%">오른다</div>
+                    </div>
+                </div>
+            </p>
+            <p>
+                <h5>단기 시계열 예측 지표</h5>
+                <small>오늘 오전 9시 종가를 기준으로 내일 오전 9시 종가를 예측해봅니다.</small>
+                <div class="my-4 p-3 bg-light rounded">
+                    <h5 class="mb-3">ElasticNet 회귀</h5>
+                    <p>BTC-KRW 내일 종가 예측값: <strong>{{ elasticnet_prediction|floatformat:2|intcomma }} KRW</strong></p>
+                    <p>예측한 변화율:
+                        <strong class="{% if elasticnet_percentage_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if elasticnet_percentage_change >= 0 %}+{% endif %}{{ elasticnet_percentage_change|floatformat:2 }}%
+                        </strong>
+                    </p>
+                </div>
+                <div class="my-4 p-3 bg-light rounded">
+                    <h5 class="mb-3">ARIMA</h5>
+                    <p>BTC-KRW 내일 종가 예측값: <strong>{{ arima_prediction|floatformat:2|intcomma }} KRW</strong></p>
+                    <p>예측한 변화율:
+                        <strong class="{% if arima_percentage_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if arima_percentage_change >= 0 %}+{% endif %}{{ arima_percentage_change|floatformat:2 }}%
+                        </strong>
+                    </p>
+                </div>
+                <div class="my-4 p-3 bg-light rounded">
+                    <h5 class="mb-3">다층 퍼셉트론</h5>
+                    <p>BTC-KRW 내일 종가 예측값: <strong>{{ mlp_prediction|floatformat:2|intcomma }} KRW</strong></p>
+                    <p>예측한 변화율:
+                        <strong class="{% if mlp_percentage_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if mlp_percentage_change >= 0 %}+{% endif %}{{ mlp_percentage_change|floatformat:2 }}%
+                        </strong>
+                    </p>
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    fetchNewsAndSentiment();
+    document.getElementById('fetchTechnicalAIResponse').addEventListener('click', function() {
+        fetchTechnicalAIResponse();
+    });
+
+    // Handle the form submission
+    document.querySelector('.voting-container form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent the default form submission
+        const formData = new FormData(this); // 'this' refers to the form element
+
+        fetch("{% url 'aiphabtc:submit_sentiment_vote' %}", {
+            method: 'POST',
+            credentials: 'include', // Needed for including cookies (CSRF token)
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest', // Indicates an AJAX request
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Display the success/error message
+            alert(data.message); // For simplicity, using an alert
+            // You might want to update the DOM instead of showing an alert
+            updatePieChart(data);
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Initialize the pie chart here to ensure the DOM is fully loaded
+    // Moved the chart initialization to a separate function for clarity
+    initializePieChart();
+});
+
+function fetchNewsAndSentiment() {
+    // Show the loading indicator
+    const loadingIndicator = document.querySelector('.loading-indicator');
+    loadingIndicator.style.display = 'block'; // Show loading indicator
+
+    fetch('{% url "aiphabtc:get_news_and_sentiment" %}')
+    .then(response => response.json())
+    .then(data => {
+        // Hide the loading indicator
+        loadingIndicator.style.display = "none"; // Hide loading indicator after fetching
+
+        // Extract data from the response
+        const { scraped_data, avg_sentiment_scores_percentage, sentiment_labels } = data;
+
+        // Update the news section
+        const newsContainer = document.querySelector('.news-table');
+        newsContainer.innerHTML = ''; // Clear existing news
+        scraped_data.forEach(item => {
+            const newsRow = document.createElement('div');
+            newsRow.className = 'news-row';
+            newsRow.innerHTML = `
+                <div class="news-cell title-cell" data-tooltip="${item.contents}">
+                    <span class="news-title">${item.titles}</span>
+                </div>
+                <div class="news-cell datetime-cell">
+                    <span class="news-datetime">${new Date(item.datetimes).toLocaleString()}</span>
+                </div>
+            `;
+            newsContainer.appendChild(newsRow);
+        });
+
+        // Update the sentiment scores section
+        const sentimentScoresContainer = document.querySelector('.sentiment-scores');
+        sentimentScoresContainer.innerHTML = ''; // Clear existing scores
+        avg_sentiment_scores_percentage.forEach((score, index) => {
+            const sentimentScoreDiv = document.createElement('div');
+            sentimentScoreDiv.className = 'sentiment-score';
+            const sentimentBar = document.createElement('div');
+            sentimentBar.className = 'sentiment-bar';
+            sentimentBar.style.width = `${score}%`;
+            const sentimentText = document.createElement('span');
+            sentimentText.className = 'sentiment-text';
+            sentimentText.style.color = 'black';
+            sentimentText.innerText = `${score}%`;
+
+            sentimentScoreDiv.innerHTML = `<span class="sentiment-label">${sentiment_labels[index]}:</span>`;
+            sentimentScoreDiv.appendChild(sentimentBar);
+            sentimentScoreDiv.appendChild(sentimentText);
+
+            sentimentScoresContainer.appendChild(sentimentScoreDiv);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching news and sentiment:', error);
+        // Hide the loading indicator even if there is an error
+        loadingIndicator.style.display = "none";
+    });
+}
+
+function fetchTechnicalAIResponse() {
+    // Show the loading message
+    document.getElementById('TechnicalLoading').style.display = 'block';
+    document.getElementById('TechnicalAIResponse').innerHTML = ''; // Clear previous response
+
+    // Make the AJAX request
+    fetch('{% url "aiphabtc:fetch_gpt_analysis" %}')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Hide the loading message
+        document.getElementById('TechnicalLoading').style.display = 'none';
+
+        // Update the DOM with the response
+        document.getElementById('TechnicalAIResponse').innerHTML = data.chat_message;
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        document.getElementById('TechnicalLoading').style.display = 'none';
+        document.getElementById('TechnicalAIResponse').innerHTML = 'Sorry, there was a problem fetching the analysis.';
+    });
+}
+
+function initializePieChart() {
+    // Assuming 'sns_data' and 'sentiment_data' are available and properly formatted
+    var ctxSentiment = document.getElementById("sentimentPieChart").getContext("2d");
+    // Ensure the data is correctly formatted and passed here
+    var sentimentData = {
+        datasets: [{
+            data: {{ sentiment_data.data|safe }}, // Assuming sns_data.data is an array of numbers
+            backgroundColor: [
+                'darkgreen', // Dark Green
+                'green',     // Green
+                'red',       // Red
+                'darkred',    // Dark Red
+                'grey',      // Grey
+            ],
+        }],
+        labels: {{ sentiment_data.labels|safe }}, // Assuming sentiment_data.labels is an array of strings
+    };
+
+    new Chart(ctxSentiment, {
+        type: "pie",
+        data: sentimentData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Adjusted for better responsiveness
+        }
+    });
+}
+</script>
+{% endblock %}

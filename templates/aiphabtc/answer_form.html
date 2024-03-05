@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+    <form method="post" class="post-form">
+        {% csrf_token %}
+        {% include "form_errors.html" %}
+        <div class="form-group">
+            <label for="content">답변내용</label>
+            <div id="editor" style="height: 300px;">{{ form.content.value|default_if_none:''|safe }}</div> <!-- Placeholder for Quill editor -->
+            <textarea class="form-control" name="content" id="content" rows="10" style="display: none;">
+                {{ form.content.value|default_if_none:'' }}
+            </textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">저장하기</button>
+    </form>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var quill = new Quill('#editor', {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ 'header': 1 }, { 'header': 2 }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'script': 'sub'}, { 'script': 'super' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          [{ 'direction': 'rtl' }],
+          [{ 'size': ['small', false, 'large', 'huge'] }],
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'font': [] }],
+          [{ 'align': [] }],
+          ['clean'],
+          ['link', 'image', 'video'],
+          ['formula'],
+        ],
+        formula: true // Enable formula mode here
+      }
+    });
+
+    // When the form is submitted, populate the textarea with the content from the editor
+    document.querySelector('form').onsubmit = function(e) {
+      var content = document.querySelector('textarea[name="content"]');
+      if (content) {
+        content.value = quill.root.innerHTML; // Ensure the innerHTML of the editor is assigned to the textarea
+      }
+    };
+  });
+</script>
+{% endblock %}

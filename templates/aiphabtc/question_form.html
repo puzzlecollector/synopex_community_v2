@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ block.super }}
+<style>
+    .custom-form-label { font-weight: bold; }
+    .form-control { border-radius: 0.25rem; }
+    .btn-primary { background-color: #007bff; border-color: #007bff; }
+    #currentPrice { margin-top: 0.5rem; font-weight: bold; }
+    .post-form { background: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .editor-container { background: white; }
+    .market-info { display: flex; justify-content: space-between; align-items: center; }
+    .duration-range, .price-range { display: flex; gap: 10px; align-items: center; }
+    .final-verdict { display: flex; gap: 20px; align-items: center; }
+    .final-verdict input { margin-top: 0; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">게시글 등록</h2>
+    <form method="post" class="post-form">
+        {% csrf_token %}
+        <!-- Error Display -->
+        {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
+                <ul>
+                {% for field in form %}
+                    {% if field.errors %}
+                    <li><strong>{{ field.label }}:</strong> {{ field.errors }}</li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <div class="form-group">
+            <label for="subject" class="custom-form-label">제목</label>
+            <input type="text" class="form-control" name="subject" id="subject" value="{{ form.subject.value|default_if_none:'' }}">
+        </div>
+        <div class="form-group">
+            <label for="content" class="custom-form-label d-block">내용</label>
+            <div id="editor" class="editor-container" style="height: 300px;">{{ form.content.value|default_if_none:''|safe }}</div>
+            <textarea class="form-control" name="content" id="content" style="display: none;">{{ form.content.value|default_if_none:'' }}</textarea>
+        </div>
+        {% if board_name == "perceptive_board" %}
+        <div class="market-info">
+            <div class="form-group">
+                <label for="market" class="custom-form-label">마켓:</label>
+                {{ form.market }}
+            </div>
+            <br>
+            <br>
+            <p id="currentPrice" style="font-weight: bold;"></p>
+        </div>
+        <div class="duration-range">
+            <div class="form-group">
+                <label class="custom-form-label">기간:</label>
+                {{ form.duration_from }}
+            </div>
+            <div class="form-group">
+                <label class="custom-form-label">-</label>
+                {{ form.duration_to }}
+            </div>
+        </div>
+        <div class="price-range">
+            <div class="form-group">
+                <label class="custom-form-label">가격 범위</label>
+                {{ form.price_lower_range }}
+            </div>
+            <div class="form-group">
+                <label class="custom-form-label">-</label>
+                {{ form.price_upper_range }}
+            </div>
+        </div>
+        <div class="final-verdict">
+            <label class="custom-form-label">총평:</label>
+            {{ form.final_verdict }}
+        </div>
+        {% endif %}
+        <button type="submit" class="btn btn-primary mt-3">저장하기</button>
+    </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var quill = new Quill('#editor', {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ 'header': 1 }, { 'header': 2 }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'script': 'sub'}, { 'script': 'super' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          [{ 'direction': 'rtl' }],
+          [{ 'size': ['small', false, 'large', 'huge'] }],
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'font': [] }],
+          [{ 'align': [] }],
+          ['clean'],
+          ['link', 'image', 'video'],
+          ['formula'],
+        ],
+        formula: true // Enable formula mode here
+      }
+    });
+
+    // When the form is submitted, populate the textarea with the content from the editor
+    document.querySelector('form').onsubmit = function(e) {
+      var content = document.querySelector('textarea[name="content"]');
+      if (content) {
+        content.value = quill.root.innerHTML; // Ensure the innerHTML of the editor is assigned to the textarea
+      }
+    };
+
+    // Function to format numbers with commas
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function fetchCurrentPrice(market) {
+      // Set a default ticker if none is selected
+      const defaultMarket = "KRW-BTC";
+      market = market || defaultMarket;
+
+      // Update this URL to use your Django app's URL for getting the current price
+      fetch('/aiphabtc/get-current-price/' + market)
+        .then(response => response.json())
+        .then(data => {
+          // Format the price with commas and update the text content of the 'currentPrice' element
+          document.getElementById('currentPrice').textContent = '현재 가격: ' + numberWithCommas(data.price) + '원';
+        })
+        .catch(error => console.error('Error fetching current price:', error));
+    }
+
+    // Initially fetch price for the default market
+    fetchCurrentPrice();
+
+    // Listen for changes on the market dropdown
+    var marketDropdown = document.querySelector('#id_market'); // Make sure this selector matches your form field's ID
+    marketDropdown.addEventListener('change', function() {
+      var selectedMarket = marketDropdown.value;
+      fetchCurrentPrice(selectedMarket);
+    });
+  });
+</script>
+{% endblock %}
+
