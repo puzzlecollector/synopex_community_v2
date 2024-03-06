@@ -159,6 +159,43 @@
         text-align: center;
         margin-top: 10px;
     }
+
+    .advertisement-container {
+        text-align: center; /* Center the advertisement */
+        margin: 20px 0; /* Add some space around the ad */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Optional: Adds a subtle shadow around the ad for depth */
+        border-radius: 8px; /* Optional: Rounds the corners of the ad container */
+        overflow: hidden; /* Ensures the border-radius clips the image if needed */
+    }
+
+    .advertisement-image {
+        width: 100%; /* Ensures the image fills the container */
+        transition: transform 0.3s ease; /* Smoothly scales the image on hover */
+    }
+
+    .advertisement-container:hover .advertisement-image {
+        transform: scale(1.05); /* Slightly enlarges the image on hover for a subtle interactive effect */
+    }
+
+    .ad-label {
+        display: block;
+        text-align: center;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .footer {
+        text-align: center; /* Center-align text */
+        padding: 20px; /* Add some padding */
+        background-color: #f2f2f2; /* Light grey background */
+        color: #333; /* Darker text color for contrast */
+        font-size: 0.9rem; /* Adjust the font size */
+        border-top: 1px solid #ddd; /* Add a top border line */
+        margin-top: 20px; /* Add some space above the footer */
+    }
 </style>
 {% endblock %}
 
@@ -495,6 +532,18 @@
                 </button>
             </div>
             <br>
+            <!-- add search bar -->
+            <div class="search-container">
+                <form action="{% url 'aiphabtc:search_results' %}" method="get" class="row gx-2">
+                    <div class="col">
+                        <input class="form-control form-control-lg" type="search" placeholder="Search" aria-label="Search" name="q">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">포스트 검색</button>
+                    </div>
+                </form>
+            </div>
+            <br>
             <div class="row">
                 {% for board, posts in board_posts.items %}
                 <div class="col-6 mb-4">
@@ -633,8 +682,26 @@
                     </p>
                 </div>
             </p>
+            <!-- add advertisement banners here -->
+            <div class="row">
+                <div class="col-md-6 advertisement-container">
+                    <div class="ad-label"><strong>광고</strong></div>
+                    <a href="https://www.youtube.com/@Coin-Issue" target="_blank">
+                        <img src="{% static 'coinissue_ad2.png' %}" class="img-fluid advertisement-image">
+                    </a>
+                </div>
+                <div class="col-md-6 advertisement-container">
+                    <div class="ad-label"><strong>광고</strong></div>
+                    <a href="http://quantylab.com/" target="_blank">
+                        <img src="{% static 'quantylab_ad2.png' %}" class="img-fluid advertisement-image">
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
+</div>
+<div class="footer">
+    <p>상호명: 알파비트 | 대표: 김민석 | 알파비트는 인공지능 및 비트코인 정보공유 플랫폼입니다. 본 지표와 봇들은 투자 권유용이 아닙니다. 투자는 항상 본인이 신중하게 결정해서 하시길 바랍니다.</p>
 </div>
 {% endblock %}
 

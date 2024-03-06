@@ -32,7 +32,7 @@ from sklearn.neural_network import MLPRegressor
 from xgboost import XGBClassifier
 import lightgbm as lgb
 from common.models import PointTokenTransaction
-
+from django.db.models import Q
 
 
 # it says bitget, but we are using coinbase data
@@ -477,6 +477,9 @@ def detail(request, question_id):
     context = {"question": question}
     return render(request, 'aiphabtc/question_detail.html', context)
 
+def community_guideline(request):
+    return render(request, "guidelines.html", {})
+
 # for perceptive board
 def get_current_price(request, ticker):
     try:
@@ -486,5 +489,21 @@ def get_current_price(request, ticker):
         # Handle errors or the case where the price cannot be fetched
         return JsonResponse({'error': str(e)}, status=400)
 
+def search_results(request):
+    query = request.GET.get('q')
+    if query:
+        questions = Question.objects.filter(Q(subject__icontains=query) | Q(content__icontains=query))
+        answers = Answer.objects.filter(content__icontains=query)
+        comments = Comment.objects.filter(content__icontains=query)
+    else:
+        questions = Answer.objects.none()
+        answers = Answer.objects.none()
+        comments = Comment.objects.none()
 
-
+    context = {
+        'query': query,
+        'questions': questions,
+        'answers': answers,
+        'comments': comments,
+    }
+    return render(request, 'aiphabtc/search_results.html', context)

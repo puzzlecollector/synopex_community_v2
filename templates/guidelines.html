@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head %}
+{{ block.super }}
+<style>
+    .key-members {
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        margin-bottom: 20px;
+    }
+    .page-intro {
+        background-color: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .points-system, .level-system {
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        margin-bottom: 20px;
+    }
+    .footer-info {
+        background-color: #007bff;
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+        border-radius: 5px;
+        margin-top: 30px;
+    }
+    h2, h3 {
+        color: #007bff;
+    }
+    ul {
+        padding-left: 20px;
+    }
+    li {
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-intro">
+        <h2>알파비트 소개</h2>
+        <p>알파비트는 인공지능, 블록체인, 코인 시장에 대한 유익한 정보와 교육 자료를 공유하며, 비트코인 및 알트코인의 추세 분석 및 가격 예측을 자유롭게 진행할 수 있는 플랫폼입니다. 사용자는 인공지능을 활용하여 코인 가격을 예측하는 방법, 개인 투자봇 개발 시작 방법에 대한 인사이트를 얻을 수 있습니다. 우리의 목표는 한국을 넘어 글로벌 사용자 커뮤니티를 형성하는 대한민국 최고의 코인 인공지능 전문 플랫폼이 되는 것입니다. 알파비트 팀은 암호화폐와 인공지능의 접목에 대한 열정을 가진 전문가들로 구성되어 있으며, 주요 출판 논문에는 IEEE에 출판된 <a href="https://ieeexplore.ieee.org/document/10014986">"CBITS: Crypto BERT Incorporated Trading System"</a>과 KDD 2023 Machine Learning in Finance workshop에 출판된 <a href="https://arxiv.org/abs/2308.08558">"BIRP: Bitcoin Information Retrieval Prediction Model Based on Multimodal Pattern Matching"</a> 등이 있습니다. 저희는 연구개발을 지속적으로 이어가고 있습니다. 저희는 대중이 비트코인과 암호화폐를 단순한 투기 대상으로 보지 않고, 그 본질과 가치를 제대로 이해하기를 바랍니다. 투자 결정을 내리기 전에, 이러한 디지털 자산들이 무엇인지 충분히 공부하고 이해하는 과정을 통해, 정보에 기반한 현명한 투자를 할 수 있도록 돕는 것이 저희의 목표입니다.</p>
+    </div>
+
+    <div class="key-members">
+        <h3>핵심 멤버</h3>
+        <div class="key-member">
+            <h5>Luke</h5>
+            <p>Stanford University 수학 전공. 인공지능 연구원, 알파비트 CEO</p>
+        </div>
+        <div class="key-member">
+            <h5>Kevin</h5>
+            <p>UCLA 물리학 전공. SWE, 알파비트 CTO</p>
+        </div>
+        <div class="key-member">
+            <h5>Russell</h5>
+            <p>전업 코인 트레이더, 알파비트 CMO</p>
+        </div>
+        <div class="key-member">
+            <h5>SJ</h5>
+            <p>블록체인 공부하는 사람, 코린이, 알파비트 이사 및 CS담당</p>
+        </div>
+    </div>
+
+    <div class="points-system">
+        <h3>커뮤니티 포인트제도 및 가이드라인</h3>
+        <p>커뮤니티 활동을 통해 포인트를 적립하고 랭킹을 높여 나갈 수 있습니다. 커뮤니티 활동을 통한 포인트 적립 외에도 유저의 관점 정확도를 평가하여 표출하는 기능을 도입할 예정입니다. 이를 통해 유저 간 DM 및 소통이 가능하도록 할 계획입니다.</p>
+        <ul>
+            <li>출석체크: 4점</li>
+            <li>자유게시판 글 작성: 2점</li>
+            <li>인공지능/트레이딩/블록체인/경제 및 시황 게시판 글 작성: 3점</li>
+            <li>질문과 답변 게시판 글 작성: 4점</li>
+            <li>관점공유 게시판 글 작성: 5점</li>
+            <li>친구 추천 보상: 50점</li>
+            <li>질문과 답변 게시판 답글 작성: 4점</li>
+            <li>기타 게시판 답글 작성: 1점</li>
+        </ul>
+        <p>게시물은 주기적으로 모니터링되며, 부적절한 내용을 포함한 게시물은 청정하게 관리됩니다. 교육 목적의 깨끗한 커뮤니티 운영을 목표로 합니다.</p>
+    </div>
+
+    <div class="level-system">
+        <h3>등급 시스템</h3>
+        <p>포인트에 따라 다음과 같은 등급이 부여됩니다</p>
+        <ul>
+            <li>0-99점: Beginner</li>
+            <li>100-199점: Bronze</li>
+            <li>200-299점: Silver</li>
+            <li>300-999점: Gold</li>
+            <li>1000-1999점: Platinum</li>
+            <li>2000-9999점: Master</li>
+            <li>10000점 이상: Grandmaster</li>
+        </ul>
+        <p>알파비트에서 활발한 활동을 통해 코인 및 인공지능에 대한 학습이 보다 유익하길 바랍니다. 같이 성장해 나갑시다 :)</p>
+    </div>
+</div>
+{% endblock %}
+
+

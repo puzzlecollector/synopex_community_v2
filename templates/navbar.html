@@ -16,6 +16,7 @@
             <li><a class="nav-link" href="{% url 'aiphabtc:board_filtered' 'blockchain' %}">블록체인</a></li>
             <li><a class="nav-link" href="{% url 'aiphabtc:board_filtered' 'economics' %}">경제 및 시황</a></li>
             <li><a class="nav-link" href="{% url 'aiphabtc:board_filtered' 'creator_reviews' %}">방송과 책 리뷰</a></li>
+            <li><a class="nav-link" href="{% url 'aiphabtc:guideline' %}">커뮤니티 이용 가이드라인</a></li>
             {% if user.is_authenticated %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'common:account_page' %}">

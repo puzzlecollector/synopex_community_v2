@@ -43,4 +43,10 @@ urlpatterns = [
 
     # getting current price of ticker
     path('get-current-price/<str:ticker>/', base_views.get_current_price, name='get_current_price'),
+
+    # getting main landing page search results
+    path('search/', base_views.search_results, name='search_results'),
+
+    # view community guideline
+    path('guidelines/', base_views.community_guideline, name="guideline"),
 ]
