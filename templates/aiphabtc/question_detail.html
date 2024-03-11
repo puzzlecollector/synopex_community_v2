@@ -15,22 +15,22 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a href="{% url 'aiphabtc:board_filtered' question.board.name %}">
-                    {% if question.board.name == "free_board" %}
-                        자유게시판
-                    {% elif question.board.name == "trading" %}
-                        트레이딩
-                    {% elif question.board.name == "AI" %}
-                        인공지능
-                    {% elif question.board.name == "general_qa" %}
+                    {% if question.board.name == "diet_logs" %}
+                        체중 관리팁
+                    {% elif question.board.name == "exercise_log" %}
+                        운동 기록 공유
+                    {% elif question.board.name == "health_question_and_answers" %}
                         질문과 답변
-                    {% elif question.board.name == "blockchain" %}
-                        블록체인
-                    {% elif question.board.name == "perceptive_board" %}
-                        관점공유 게시판
-                    {% elif question.board.name == "economics" %}
-                        경제 및 시황
-                    {% elif question.board.name == "creator_reviews" %}
-                        방송과 책 리뷰
+                    {% elif question.board.name == "research_paper_sharing_board" %}
+                        논문과 정보공유 게시판
+                    {% elif question.board.name == "weight_disease_stress" %}
+                        질환과 스트레스 극복
+                    {% elif question.board.name == "insurance_policy_information" %}
+                        보험과 정책 정보
+                    {% elif question.board.name == "hospital_and_medicine" %}
+                        병원과 의약품 정보
+                    {% elif question.board.name == "struggle_stories" %}
+                        투병 이야기
                     {% else %}
                         {{ question.board.name }}
                     {% endif %}

@@ -43,22 +43,26 @@ def question_create(request, board_name):
             profile = request.user.profile
             score_obtained = 5
             reason = ""
-            if board_name == "perceptive_board":
+            if board_name == "diet_logs":
                 score_obtained = 5
                 profile.score += 5
-                reason = "관점 게시글 작성 보상"
-            elif board_name == "free_board":
-                score_obtained = 2
-                profile.score += 2
-                reason = "자유 게시판 게시글 작성 보상"
-            elif board_name in ["AI", "trading", "blockchain", "economics"]:
-                score_obtained = 3
+                reason = "체중 관리 팁"
+            elif board_name == "exercise_log":
+                score_obtained = 5
+                profile.score += 5
+                reason = "운동 기록 공유 게시판 게시글 작성 보상"
+            elif board_name in ["research_paper_sharing_board", "insurance_policy_information", "hospital_and_medicine"]:
+                score_obtained = 5
                 profile.score += 3
                 reason = "전문 게시판 게시글 작성 보상"
-            elif board_name in ["general_qa", "creator_reviews"]:
-                score_obtained = 4
-                profile.score += 4
+            elif board_name in ["health_question_and_answers"]:
+                score_obtained = 5
+                profile.score += 5
                 reason = "Q&A / 리뷰 게시판 게시글 작성 보상"
+            elif board_name in ["weight_disease_stress", "struggle_stories"]:
+                score_obtained = 5
+                profile.score += 5
+                reason = "투병 일지 / 질환과 스트레스 극복 게시판 작성 보상"
             profile.save()
             PointTokenTransaction.objects.create(
                 user=request.user,
@@ -100,22 +104,26 @@ def question_delete(request, question_id):
     profile = request.user.profile
     score_obtained = -5
     reason = ""
-    if board_name == "perceptive_board":
-        profile.score -= 5
+    if board_name == "diet_logs":
         score_obtained = -5
-        reason = "관점공유 글 삭제 보상 철회"
-    elif board_name == "free_board":
-        profile.score -= 2
-        score_obtained = -2
-        reason = "자유게시판 글 삭제 보상 철회"
-    elif board_name in ["AI", "trading", "blockchain", "economics"]:
-        profile.score -= 3
-        score_obtained = -3
-        reason = "전문 게시판 게시글 삭제 보상 철회"
-    elif board_name in ["general_qa", "creator_reviews"]:
-        profile.score -= 4
-        score_obtained = -4
-        reason = "Q&A / 리뷰 게시판 게시글 삭제 보상 철회"
+        profile.score -= 5
+        reason = "체중 관리 팁 글 삭제"
+    elif board_name == "exercise_log":
+        score_obtained = -5
+        profile.score -= 5
+        reason = "운동 기록 공유 게시판 게시글 삭제"
+    elif board_name in ["research_paper_sharing_board", "insurance_policy_information", "hospital_and_medicine"]:
+        score_obtained = -5
+        profile.score -= 5
+        reason = "전문 게시판 게시글 삭제"
+    elif board_name in ["health_question_and_answers"]:
+        score_obtained = -5
+        profile.score -= 5
+        reason = "Q&A / 리뷰 게시판 게시글 삭제"
+    elif board_name in ["weight_disease_stress", "struggle_stories"]:
+        score_obtained = -5
+        profile.score -= 5
+        reason = "투병 일지 / 질환과 스트레스 극복 게시판 삭제"
     if profile.score < 0:
         profile.score = 0
     profile.save()

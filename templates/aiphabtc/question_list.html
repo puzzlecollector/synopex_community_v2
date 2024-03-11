@@ -7,22 +7,22 @@
     <div class="row my-3">
         <div class="col-12">
             <h3 class="text-left">
-                {% if board.name == 'free_board' %}
-                    자유게시판
-                {% elif board.name == 'AI' %}
-                    인공지능
-                {% elif board.name == 'trading' %}
-                    트레이딩
-                {% elif board.name == 'blockchain' %}
-                    블록체인
-                {% elif board.name == 'general_qa' %}
+                {% if board.name == 'diet_logs' %}
+                    체중 관리팁
+                {% elif board.name == 'exercise_log' %}
+                    운동 기록 공유
+                {% elif board.name == 'health_question_and_answers' %}
                     질문과 답변
-                {% elif board.name == 'perceptive_board' %}
-                    관점공유 게시판
-                {% elif board.name == 'economics' %}
-                    경제 및 시황
-                {% elif board.name == 'creator_reviews' %}
-                    방송과 책 리뷰
+                {% elif board.name == 'research_paper_sharing_board' %}
+                    논문과 정보공유 게시판
+                {% elif board.name == 'weight_disease_stress' %}
+                    질환과 스트레스 극복
+                {% elif board.name == 'insurance_policy_information' %}
+                    보험과 정책 정보
+                {% elif board.name == 'hospital_and_medicine' %}
+                    병원과 의약품 정보
+                {% elif board.name == 'struggle_stories' %}
+                    투병 이야기
                 {% else %}
                     {{ board.name }}
                 {% endif %}

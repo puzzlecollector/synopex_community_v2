@@ -170,6 +170,8 @@
 
     .advertisement-image {
         width: 100%; /* Ensures the image fills the container */
+        max-height: 320px; /* Adjust this value based on your needs */
+        object-fit: contain; /* Ensures the image scales properly */
         transition: transform 0.3s ease; /* Smoothly scales the image on hover */
     }
 
@@ -196,6 +198,27 @@
         border-top: 1px solid #ddd; /* Add a top border line */
         margin-top: 20px; /* Add some space above the footer */
     }
+
+    .blur-effect {
+        filter: blur(5px);
+        position: relative;
+    }
+
+    .login-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-weight: bold;
+        color: #333;
+        border-radius: 5px; /* Optional: if your chart containers have border-radius */
+    }
 </style>
 {% endblock %}
 
@@ -210,66 +233,75 @@
     {% endif %}
     <div class="row">
         <div class="col-lg-6">
-            <h3>비트코인 시황 대시보드</h3>
+            <h3>헬스케어 대시보드</h3>
             <hr>
-            <!-- Dashboard content here -->
-            <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <a href="https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"><img src="{% static 'upbit.png' %}" alt="settings" style="height:20px; margin-right: 5px;">UPbit</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <a href="https://www.bybit.com/en/"><img src="{% static 'bybit.png' %}" alt="settings" style="height:20px; margin-right: 5px;">Bybit</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <a href="https://www.okx.com/join/36629823?gad_source=1&gclid=CjwKCAiAloavBhBOEiwAbtAJOyJGUidiYHP3emtf_Xz4vot1pz6rxj_NTJhrLR6kU2-Ftpo08BysNBoCO_MQAvD_BwE"><img src="{% static 'okx.png' %}" alt="settings" style="height:20px; margin-right: 5px;">OKX</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <a href="https://www.mexc.com/ko-KR"><img src="{% static 'mexc.png' %}" alt="settings" style="height:20px; margin-right: 5px;">MEXC</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <a href="https://www.pionex.com/en/"><img src="{% static 'pionex.png' %}" alt="settings" style="height:20px; margin-right: 5px;">Pionex</a>
-                </button>
+            <div class="weather-info my-4">
+                <h5 class="mb-3">오늘의 날씨</h5>
+                <div class="mb-4">
+                    <label for="citySelection" class="form-label"><strong>지역 선택:</strong></label>
+                    <select class="form-select" id="citySelection" onchange="window.location.href='?city=' + this.value;">
+                        {% for city in cities %}
+                            <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <th scope="row">지역</th>
+                            <td>{{ weather_data.name }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">상태</th>
+                            <td>{{ weather_data.weather }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">온도</th>
+                            <td>{{ weather_data.temperature }}°C (체감: {{ weather_data.feels }}°C)</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">최저/최고 온도</th>
+                            <td>{{ weather_data.min_temp }}°C / {{ weather_data.max_temp }}°C</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">습도</th>
+                            <td>{{ weather_data.humidity }}%</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">풍속</th>
+                            <td>{{ weather_data.wind_speed }}m/s</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">풍향</th>
+                            <td>{{ weather_data.wind_deg }}°</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <br>
-            <!-- TradingView Widget -->
-            <div class="tradingview-widget-container">
-                  <div class="tradingview-widget-container__widget" style="height:400px;width:100%">
-                      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                          {
-                              "autosize": false,
-                              "symbol": "UPBIT:BTCKRW",
-                              "interval": "D",
-                              "timezone": "Etc/UTC",
-                              "theme": "light",
-                              "style": "1",
-                              "locale": "en",
-                              "toolbar_bg": "#f1f3f6",
-                              "enable_publishing": false,
-                              "allow_symbol_change": true,
-                              "studies": [
-                                "STD;RSI"
-                              ],
-                              "container_id": "tradingview_3e3e3"
-                          }
-                      </script>
-                  </div>
-            </div>
-            <br><br>
             <div style="text-align: left; margin-top: 10px; margin-botton: 10px;">
-                <button id="fetchTechnicalAIResponse" class="btn btn-primary">AI 일봉 추세 분석 보기</button>
+                <button id="fetchTechnicalAIResponse" class="btn btn-primary">AI 날씨 정보 해석</button>
                 <div id="TechnicalLoading" style="display:none;">AI가 분석중... 시간이 조금만 기다려주세요!</div>
             </div>
             <!-- GPT 일봉 추세 분석 -->
             <p id="TechnicalAIResponse">{{ technical_chat_message }}</p>
+            <br>
+            <div class="row">
+                <div class="col-12 advertisement-container">
+                    <div class="ad-label"><strong>[광고] 시노텍스 마스크 제품 가상착용, 날씨랑 미세먼지 확인은 간편하게 어플에서!</strong></div>
+                    <a href="https://play.google.com/store/apps/details?id=com.lynxbus" target="_blank">
+                        <img src="{% static 'synotex_maskapp_ad.png' %}" class="img-fluid advertisement-image">
+                    </a>
+                </div>
+            </div>
             <hr style="height: 3px; background-color: green;">
             <p>
-                <a href="https://www.coinness.com" target="_blank" style="text-decoration: none; color: inherit;">
-                    <img src="{% static 'coinness.png' %}" alt="Coinness Icon" style="vertical-align: middle; margin-right: 5px; height: 30px;">
+                <a href="https://health.chosun.com/list.html" target="_blank" style="text-decoration: none; color: inherit;">
+                    <img src="{% static 'health_chosun.png' %}" alt="healthchosun Icon" style="vertical-align: middle; margin-right: 5px; height: 30px;">
                 </a>
-                <strong>코인니스 최신 속보</strong>
+                <strong>최신 헬스케어 뉴스</strong>
                 <div class="d-flex justify-content-center">
                     <div class="news-table w-100">
-                        <div class="loading-indicator" style="display: none; text-align: center;">최신 속보를 읽어오는 중입니다... 조금만 기다려주세요!</div>
+                        <div class="loading-indicator" style="display: none; text-align: center;">최신 뉴스를 읽어오는 중입니다... 조금만 기다려주세요!</div>
                         {% for item in scraped_data %}
                             <div class="news-row">
                                 <div class="news-cell title-cell" data-tooltip="{{ item.contents }}">
@@ -282,253 +314,87 @@
                         {% endfor %}
                     </div>
                 </div>
-                <small>더 다양한 미디어 소스에서 최신 코인 시장 뉴스를 확인해보세요!</small>
-                <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
-                    <button type="button" class="btn btn-outline-secondary btn-sm">
-                        <a href="https://www.tokenpost.kr/"><img src="{% static 'tokenpost.png' %}" alt="settings" style="height:30px; margin-right: 5px;">토큰포스트</a>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm">
-                        <a href="https://www.blockmedia.co.kr/"><img src="{% static 'blockmedia.png' %}" alt="settings" style="height:30px; margin-right: 5px;">블록미디어</a>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm">
-                        <a href="https://bloomingbit.io/?tab=real"><img src="{% static 'bloomingbit.png' %}" alt="settings" style="height:30px; margin-right: 5px;">블루밍비트</a>
-                    </button>
-                </div>
-                <p><strong> 딥러닝 언어모델 비트코인 감성 점수 </strong></p>
-                <small>최근 코인니스 속보들이 비트코인 가격에 얼만큼 호재, 악재, 중립성을 띄고 있는지 CryptoDeBERTa 언어모델이 분석한 결과입니다. 알파비트 인공지능 연구팀이 개발한 감성분류 언어모델을 기반으로 수치가 계산되었습니다.</small>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                        <a href="https://huggingface.co/LDKSolutions/KR-cryptodeberta-v2-base"><img src="{% static 'huggingface.png' %}" alt="settings" style="height:40px; margin-right: 5px;">알파비트 크립토 언어모델</a>
-                </button>
-                <div class="sentiment-scores">
-                    {% for score in avg_sentiment_scores_percentage %}
-                        <div class="sentiment-score">
-                            <span class="sentiment-label">{{ sentiment_labels|get_item:forloop.counter0 }}:</span>
-                            <div class="sentiment-bar" style="width: {{ score }}%;"></div>
-                            <span class="sentiment-text" style="color: black;">{{ score|floatformat:2 }}%</span>
-                        </div>
-                    {% endfor %}
-                </div>
             </p>
+            <div class="container mt-3">
+                <h5>{% if user.is_authenticated %}{{ user.username }}{% else %}user{% endif %}의 몸무게 변화</h5>
+                {% if user.is_authenticated %}
+                <canvas id="weightChangeChart"></canvas>
+                {% else %}
+                <div class="blur-effect" style="height: 200px; position: relative;">
+                    <canvas id="weightChangeChartblurred"></canvas>
+                    <div class="login-overlay"><a href="{% url 'common:login' %}">확인하려면 로그인하세요</a></div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="container mt-3">
+                <h5>{% if user.is_authenticated %}{{ user.username }}{% else %}user{% endif %}의 섭취 칼로리 변화</h5>
+                {% if user.is_authenticated %}
+                <canvas id="calorieIntakeChart"></canvas>
+                {% else %}
+                <div class="blur-effect" style="height: 200px; position: relative;">
+                    <canvas id="calorieIntakeChartblurred"></canvas>
+                    <div class="login-overlay"><a href="{% url 'common:login' %}">확인하려면 로그인하세요</a></div>
+                </div>
+                {% endif %}
+            </div>
+
             <hr style="height: 3px; background-color: green;">
-            <p>
-                <strong>크립토 공포 탐욕 지수</strong>
-                <span class="tooltip-question-mark" data-toggle="tooltip" data-html="true" title="크립토 공포와 탐욕 지수는 투자자들의 시장에 대한 감정을 나타내는 지표 중 하나로 사용됩니다. 이 지수는 0에서 100 사이의 값을 가지며, 0에 가까울수록 투자자들이 두려움을 느끼고 있음을, 100에 가까울수록 탐욕적임을 나타냅니다. 이 지수는 주로 시장의 극단적인 감정 상태를 포착해 반대 방향으로의 변화를 예측하는데 사용됩니다. 지수가 탐욕으로 옮겨가면 비트코인 가격이 오를 가능성이 있지만, 이는 또한 가격이 과열되어 조정을 받을 수 있는 시점에 접어들 수 있음을 의미합니다.">[?]</span>
-                <p>비트코인 및 기타 대형 암호화폐를 위한 최근 7일동안의 공포 탐욕 지수입니다 <a href="https://alternative.me/crypto/fear-and-greed-index/">[참고]</a></p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Value</th>
-                            <th>Value Classification</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for row in data_fng %}
-                        <tr>
-                            <td>{{ row.timestamp }}</td>
-                            <td>{{ row.value }}</td>
-                            <td>{{ row.value_classification }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </p>
-            <hr style="height: 3px; background-color: green;">
-            <p>
-                <strong>글로벌 크립토 시장 정보</strong>
-                <p>암호화폐 시장의 전반적인 정보입니다 <a href="https://www.coinlore.com/ko/cryptocurrency-data-api">[참고]</a></p>
-                <table class="table">
-                    {% for row in data_global %}
-                        <tr>
-                            <th>코인 수</th>
-                            <td>{{ row.coins_count|intcomma }}</td>
-                        </tr>
-                        <tr>
-                            <th>활성 시장</th>
-                            <td>{{ row.active_markets|intcomma }}</td>
-                        </tr>
-                        <tr>
-                            <th>시가 총액 ($)</th>
-                            <td>{{ row.total_mcap |floatformat:2 |intcomma }}</td>
-                        </tr>
-                        <tr>
-                            <th>총 거래량 ($)</th>
-                            <td>{{ row.total_volume |floatformat:2 |intcomma }}</td>
-                        </tr>
-                        <tr>
-                            <th>시가 총액 변화 (%)</th>
-                            <td class="{% if row.mcap_change|to_float >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                {% if row.mcap_change|to_float >= 0 %}+{% endif %}{{ row.mcap_change|floatformat:2 }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>거래량 변화 (%)</th>
-                            <td class="{% if row.volume_change|to_float >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                {% if row.volume_change|to_float >= 0 %}+{% endif %}{{ row.volume_change|floatformat:2 }}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </table>
-                <div class="tradingview-widgets">
-                    <div class="tradingview-widget-container">
-                        <h5>BTC 도미넌스</h5>
-                        <!-- TradingView Widget BEGIN -->
-                        <div class="tradingview-widget-container" style="height:100%;width:100%">
-                              <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-                              <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
-                              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                                  {
-                                      "autosize": true,
-                                      "symbol": "CRYPTOCAP:BTC.D",
-                                      "interval": "D",
-                                      "timezone": "Etc/UTC",
-                                      "theme": "light",
-                                      "style": "1",
-                                      "locale": "en",
-                                      "enable_publishing": false,
-                                      "allow_symbol_change": true,
-                                      "calendar": false,
-                                      "support_host": "https://www.tradingview.com"
-                                  }
-                              </script>
-                        </div>
-                        <!-- TradingView Widget END -->
-                    </div>
-                    <div class="tradingview-widget-container">
-                        <h5>ETH 도미넌스</h5>
-                        <!-- TradingView Widget BEGIN -->
-                        <div class="tradingview-widget-container" style="height:100%;width:100%">
-                              <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-                              <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
-                              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                                  {
-                                      "autosize": true,
-                                      "symbol": "CRYPTOCAP:ETH.D",
-                                      "interval": "D",
-                                      "timezone": "Etc/UTC",
-                                      "theme": "light",
-                                      "style": "1",
-                                      "locale": "en",
-                                      "enable_publishing": false,
-                                      "allow_symbol_change": true,
-                                      "calendar": false,
-                                      "support_host": "https://www.tradingview.com"
-                                  }
-                              </script>
-                        </div>
-                        <!-- TradingView Widget END -->
-                    </div>
+            <div class="row">
+                <div class="col-md-6 advertisement-container">
+                    <div class="ad-label"><strong>[광고] 인류의 건강한 삶의 기여하는 시노텍스</strong></div>
+                    <a href="https://synotex.com/product/detail.html?product_no=357&cate_no=1&display_group=2" target="_blank">
+                        <img src="{% static 'synotex_pure_water.png' %}" class="img-fluid advertisement-image">
+                    </a>
                 </div>
-                <br><br>
-                <div>
-                    <strong>시장 상관관계 분석</strong>
-                    <p>최근 30일간 BTC-KRW와 NAS100의 가격 변동 상관관계:</p>
-                    <ul>
-                        <li><strong>피어슨 상관계수 (Pearson):</strong> {{ pearson|floatformat:2 }}</li>
-                        <li><strong>스피어만 상관계수 (Spearman):</strong> {{ spearman|floatformat:2 }}</li>
-                        <li><strong>켄달 상관계수 (Kendall's Tau):</strong> {{ kendall|floatformat:2 }}</li>
-                    </ul>
-                    <p>값이 1이나 -1에 가까울수록 강한 양 또는 음의 상관관계를 의미합니다. 상관계수 값이 -100인 경우 데이터를 가져오는데 문제가 발생했음을 의미합니다.</p>
-                </div>
-            </p>
-            <hr style="height: 3px; background-color: green;">
-            <p>
-                <strong>김치 프리미엄 정보</strong>
-                <span class="tooltip-question-mark" data-toggle="tooltip" data-html="true" title="김치 프리미엄이란 용어는 한국의 암호화폐 가격이 해외 거래소의 가격보다 높을 때 사용됩니다. 김프가 높다는 것은 해외 거래소에서 상장된 코인의 가격이 한국 내에서 거래되는 가격보다 상대적으로 저렴하다는 의미입니다.">[?]</span>
-                <p>코인베이스와 업비트에서 가져온 BTC 가격 정보로 계산된 수치입니다 (코인베이스/업비트 프리미엄)</p>
-                <table class="table">
-                    <tr>
-                        <th>현재 시간</th>
-                        <td>{{ kimchi_data.current_time }}</td>
-                    </tr>
-                    <tr>
-                        <th>USD/KRW</th>
-                        <td>{{ kimchi_data.now_usd_krw |floatformat:2 |intcomma }}</td>
-                    </tr>
-                    <tr>
-                        <th>BTC 가격 (KRW)</th>
-                        <td>{{ kimchi_data.now_upbit_price |floatformat:2 |intcomma }}</td>
-                    </tr>
-                    <tr>
-                        <th>BTC 가격 (USDT)</th>
-                        <td>{{ kimchi_data.now_bitget_price |floatformat:2 |intcomma }}</td>
-                    </tr>
-                    <tr>
-                        <th>BTC 김프 (%)</th>
-                        <td class="{% if kimchi_data.kp|to_float >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {% if kimchi_data.kp|to_float >= 0 %}+{% endif %}{{ kimchi_data.kp |floatformat:2 }}
-                        </td>
-                    </tr>
-                </table>
-            </p>
-            <div class="investment-calendar-container my-4">
-                <h3>경제 캘린더</h3>
-                <iframe src="https://sslecal2.investing.com?borderColor=%2310b316&columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone&countries=5,4,72,14,35,37,6,122,11,39&calType=week&timeZone=88&lang=18" width="650" height="300" frameborder="0" allowtransparency="true" marginwidth="0" marginheight="0"></iframe>
-                <div class="poweredBy" style="font-family: Arial, Helvetica, sans-serif;">
-                    <span style="font-size: 11px;color: #333333;text-decoration: none;">외환 포털 <a href="https://kr.Investing.com/" rel="nofollow" target="_blank" style="font-size: 11px;color: #06529D; font-weight: bold;" class="underline_link">Investing.com 한국어</a>.</span>
+                <div class="col-md-6 advertisement-container">
+                    <div class="ad-label"><strong>[광고] 인류의 건강한 삶의 기여하는 시노텍스</strong></div>
+                    <a href="https://synotex.com/product/detail.html?product_no=377&cate_no=1&display_group=2" target="_blank">
+                        <img src="{% static 'synotex_shower_hose.png' %}" class="img-fluid advertisement-image">
+                    </a>
                 </div>
             </div>
         </div>
         <div class="col-lg-6">
             <h3>커뮤니티 게시판</h3>
             <hr>
-            <small>공부를 위해 더 다양한 커뮤니티도 참고해보세요</small>
+            <small>건강관리, 당뇨와 혈당관리, 신장투석 관련 더 다양한 커뮤니티도 참고해보세요</small>
             <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'coinpickle.png' %}" alt="coinpickle Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://web.coinpickle.net/">coinpickle</a>
+                    <img src="{% static 'dr_diary.png' %}" alt="coinpickle Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://web.drdiary.co.kr/feed">닥터다이어리</a>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'coinpan.png' %}" alt="coinpan Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://coinpan.com/">coinpan</a>
+                    <img src="{% static '365health.png' %}" alt="365health Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="http://www.365healthcare.co.kr/index.php?channel=community_board&code=health_info">365 Healthcare</a>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'coinglass.png' %}" alt="coinglass Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://www.coinglass.com/LongShortRatio">coinglass</a>
+                    <img src="{% static 'walkon.png' %}" alt="coinglass Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://swallaby.com/index2">워크온</a>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'coinness.png' %}" alt="coinness Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://coinness.com/community/lounge?category=8">coinness</a>
+                        <img src="{% static 'diabetes.png' %}" alt="coinness Icon" style="height: 30px; margin-right: 5px;">
+                        <a href="https://danggun.kr/">당뇨와건강</a>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'coinsect.png' %}" alt="coinsect Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://coinsect.io/">coinsect</a>
+                    <img src="{% static 'sense_diary.png' %}" alt="sensediary Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://sensdiary.co.kr/bbs/board.php?bo_table=member_qna&page=1">센스 다이어리</a>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'sigbtc.png' %}" alt="sigbtc Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://sigbtc.pro/derivatives">sigbtc</a>
+                    <img src="{% static 'korean_kidney.png' %}" alt="kidney Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://ksn.or.kr/general/">대한신장학회</a>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'kucoin_learn.png' %}" alt="kucoin Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://www.kucoin.com/ko/learn">쿠코인 교육</a>
+                    <img src="{% static 'dr_cho.png' %}" alt="drcho Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="http://xn--zv4b80g.com/common/renal_failure.html">조병수의원</a>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'mexc.png' %}" alt="MEXC Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://www.mexc.com/ko-KR/learn">MEXC 튜토리얼</a>
+                    <img src="{% static 'naver.png' %}" alt="naver Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://blog.naver.com/donorlove/221455337537">신장질환과 신장이식수술 Q&A</a>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'binance_academy.png' %}" alt="binance academy Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://academy.binance.com/en/courses/all">Binance 아카데미</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'coingecko.png' %}" alt="coingecko Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://www.coingecko.com/">CoinGecko</a>
-                </button>
-            </div>
-            <br>
-            <small>더 많은 정보를 위해 텔레그램 커뮤니티도 참고해보세요</small>
-            <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'telegram.png' %}" alt="byun Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://t.me/whaleliq">실시간 고래 청산 내역</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'telegram.png' %}" alt="whalealert Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://t.me/whalealertkorean">실시간 고래 입출금 알람</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'telegram.png' %}" alt="goldenstick Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://t.me/GDSTofficial">골든스틱</a>
+                    <img src="{% static 'aha.png' %}" alt="aha Icon" style="height: 30px; margin-right: 5px;">
+                    <a href="https://blog.naver.com/donorlove/221455337537">아하 현직 의사 의료 Q&A</a>
                 </button>
             </div>
             <br>
@@ -550,30 +416,30 @@
                     <div class="card h-100">
                         <div class="card-header">
                             <h5>
-                                {% if board.name == 'free_board' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'free_board' %}">자유게시판</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="자유롭게 아무 주제에 대한 글을 작성해주세요">[?]</span>
-                                {% elif board.name == 'AI' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'AI' %}">인공지능</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="인공지능과 어떻게 머신러닝, 딥러닝을 코인 트레이딩에 접목시킬 수 있는지에 관한 정보글을 공유하는 곳입니다">[?]</span>
-                                {% elif board.name == 'general_qa' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'general_qa' %}">질문과 답변</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="암호화폐 시장에 관련된 질문과 답변을 해주시면 됩니다">[?]</span>
-                                {% elif board.name == 'trading' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'trading' %}">트레이딩</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="암호화폐 트레이딩에 관련된 정보를 공유하는 곳입니다">[?]</span>
-                                {% elif board.name == 'perceptive_board' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'perceptive_board' %}">관점공유 게시판</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="비트코인 및 업비트에 상장된 알트코인에 대한 관점을 제공해주고 해당 관점이 맞는지 틀렸는지에 따라 추가 포인트 보상을 받을 수 있습니다">[?]</span>
-                                {% elif board.name == 'blockchain' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'blockchain' %}">블록체인</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="블록체인 기술에 관련된 정보를 공유하는 곳입니다">[?]</span>
-                                {% elif board.name == 'economics' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'economics' %}">경제 및 시황</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="최근 경제와 시황이 어떻게 비트코인과 암호화폐에 영향을 미칠지에 대해 논의하고 경제 공부와 정보공유를 하는 곳입니다">[?]</span>
-                                {% elif board.name == 'creator_reviews' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'creator_reviews' %}">방송과 책 리뷰</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="코인 방송 크리에이터와 관련 서적에 관한 리뷰 및 정보를 공유하는 곳입니다">[?]</span>
+                                {% if board.name == 'diet_logs' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'diet_logs' %}">체중 관리팁</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="건강한 체중 관리를 위한 유용한 팁을 공유하는 커뮤니티입니다">[?]</span>
+                                {% elif board.name == 'exercise_log' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'exercise_log' %}">운동 기록 공유</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="운동 인증 사진과 오운완(오늘의 운동 완료)을 공유하며 서로를 독려하는 공간입니다">[?]</span>
+                                {% elif board.name == 'research_paper_sharing_board' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'research_paper_sharing_board' %}">논문과 정보공유 게시판</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="최신 논문과 건강 정보를 공유하며 지식을 넓히는 커뮤니티입니다">[?]</span>
+                                {% elif board.name == 'weight_disease_stress' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'weight_disease_stress' %}">질환과 스트레스 극복</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="질병과 스트레스를 극복하기 위한 방법과 경험을 나누는 커뮤니티입니다.">[?]</span>
+                                {% elif board.name == 'insurance_policy_information' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'insurance_policy_information' %}">보험과 정책 정보</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="건강 보험과 관련 정책에 대한 최신 정보를 제공하는 커뮤니티입니다">[?]</span>
+                                {% elif board.name == 'health_question_and_answers' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'health_question_and_answers' %}">질문과 답변</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="의료 및 건강관련 질문에 전문가와 회원들이 답변하는 질의응답 커뮤니티입니다">[?]</span>
+                                {% elif board.name == 'hospital_and_medicine' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'hospital_and_medicine' %}">병원과 의약품 정보</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="병원과 의약품에 대한 리뷰와 정보를 공유하는 커뮤니티입니다">[?]</span>
+                                {% elif board.name == 'struggle_stories' %}
+                                <a href="{% url 'aiphabtc:board_filtered' 'struggle_stories' %}">투병 이야기</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="병마와 싸우는 이들의 경험과 이야기를 나누는 위로와 공감의 공간입니다">[?]</span>
                                 {% else %}
                                 {{ board.name }}
                                 {% endif %}
@@ -596,7 +462,7 @@
                 {% endfor %}
             </div>
             <div>
-                <strong>비트코인에 대해서 어떻게 생각하시나요?</strong>
+                <strong>오늘 기분이 어떠신가요?</strong>
                 <div class="voting-container">
                     <form id="sentimentVoteForm" action="{% url 'aiphabtc:submit_sentiment_vote' %}" method="post">
                         {% csrf_token %}
@@ -621,79 +487,18 @@
                 </div>
             </div>
             <hr>
-            <h3>머신러닝 비트코인 가격 예측 지표</h3>
-            <p>업비트 차트를 기반으로 가벼운 머신러닝 예측을 수행했습니다. 다양한 시간대를 포함한 보다 <strong>강력한</strong> 머신러닝 지표와 투자 봇에 대해서는 아래 페이지들을 참조해 주세요!</p>
-            <p><a href="#">➡️알파비트 인공지능 및 통계기반 비트코인 투자봇 지표📈📈 (coming soon)</a></p>
-            <p><a href="#">➡️알파비트 인공지능 기반 비트코인 패턴매칭 지표📈📈 (coming soon)</a></p>
-            <p>
-                <h5>단기 방향성 예측 지표</h5>
-                <small>오늘 오전 9시 종가를 기준으로 내일 오전 9시 종가 방향성의 확률을 예측합니다. 튜닝이 되지 않은 가벼운 모델이니 참고만 해주세요. "내린다" 또는 "오른다" 위에 마우스를 올리면 모델이 예측한 각각의 확률을 볼 수 있습니다.</small>
-                <br>
-                <div class="my-4 p-3 bg-light rounded">
-                    <h5 class="mb-3">XGBoost 예측</h5>
-                    <div class="progress" style="height: 30px;">
-                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ xgb_short|floatformat:2 }}%;" aria-valuenow="{{ xgb_short|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="내린다 {{ xgb_short|floatformat:2 }}%">내린다</div>
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ xgb_long|floatformat:2 }}%;" aria-valuenow="{{ xgb_long|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="오른다 {{ xgb_long|floatformat:2 }}%">오른다</div>
-                    </div>
-                </div>
-                <div class="my-4 p-3 bg-light rounded">
-                    <h5 class="mb-3">LightGBM 예측</h5>
-                    <div class="progress" style="height: 30px;">
-                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ lgb_short|floatformat:2 }}%;" aria-valuenow="{{ lgb_short|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="내린다 {{ lgb_short|floatformat:2 }}%">내린다</div>
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ lgb_long|floatformat:2 }}%;" aria-valuenow="{{ lgb_long|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="오른다 {{ lgb_long|floatformat:2 }}%">오른다</div>
-                    </div>
-                </div>
-                <div class="my-4 p-3 bg-light rounded">
-                    <h5 class="mb-3">RandomForest 예측</h5>
-                    <div class="progress" style="height: 30px;">
-                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ rf_short|floatformat:2 }}%;" aria-valuenow="{{ rf_short|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="내린다 {{ rf_short|floatformat:2 }}%">내린다</div>
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ rf_long|floatformat:2 }}%;" aria-valuenow="{{ rf_long|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100" title="오른다 {{ rf_long|floatformat:2 }}%">오른다</div>
-                    </div>
-                </div>
-            </p>
-            <p>
-                <h5>단기 시계열 예측 지표</h5>
-                <small>오늘 오전 9시 종가를 기준으로 내일 오전 9시 종가를 예측해봅니다.</small>
-                <div class="my-4 p-3 bg-light rounded">
-                    <h5 class="mb-3">ElasticNet 회귀</h5>
-                    <p>BTC-KRW 내일 종가 예측값: <strong>{{ elasticnet_prediction|floatformat:2|intcomma }} KRW</strong></p>
-                    <p>예측한 변화율:
-                        <strong class="{% if elasticnet_percentage_change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {% if elasticnet_percentage_change >= 0 %}+{% endif %}{{ elasticnet_percentage_change|floatformat:2 }}%
-                        </strong>
-                    </p>
-                </div>
-                <div class="my-4 p-3 bg-light rounded">
-                    <h5 class="mb-3">ARIMA</h5>
-                    <p>BTC-KRW 내일 종가 예측값: <strong>{{ arima_prediction|floatformat:2|intcomma }} KRW</strong></p>
-                    <p>예측한 변화율:
-                        <strong class="{% if arima_percentage_change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {% if arima_percentage_change >= 0 %}+{% endif %}{{ arima_percentage_change|floatformat:2 }}%
-                        </strong>
-                    </p>
-                </div>
-                <div class="my-4 p-3 bg-light rounded">
-                    <h5 class="mb-3">다층 퍼셉트론</h5>
-                    <p>BTC-KRW 내일 종가 예측값: <strong>{{ mlp_prediction|floatformat:2|intcomma }} KRW</strong></p>
-                    <p>예측한 변화율:
-                        <strong class="{% if mlp_percentage_change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {% if mlp_percentage_change >= 0 %}+{% endif %}{{ mlp_percentage_change|floatformat:2 }}%
-                        </strong>
-                    </p>
-                </div>
-            </p>
             <!-- add advertisement banners here -->
             <div class="row">
                 <div class="col-md-6 advertisement-container">
-                    <div class="ad-label"><strong>광고</strong></div>
-                    <a href="https://www.youtube.com/@Coin-Issue" target="_blank">
-                        <img src="{% static 'coinissue_ad2.png' %}" class="img-fluid advertisement-image">
+                    <div class="ad-label"><strong>[광고] 인류의 건강한 삶의 기여하는 시노텍스</strong></div>
+                    <a href="https://synotex.com/product/detail.html?product_no=315&cate_no=1&display_group=2" target="_blank">
+                        <img src="{% static 'synotex_mask.png' %}" class="img-fluid advertisement-image">
                     </a>
                 </div>
                 <div class="col-md-6 advertisement-container">
-                    <div class="ad-label"><strong>광고</strong></div>
-                    <a href="http://quantylab.com/" target="_blank">
-                        <img src="{% static 'quantylab_ad2.png' %}" class="img-fluid advertisement-image">
+                    <div class="ad-label"><strong>[광고] 인류의 건강한 삶의 기여하는 시노텍스</strong></div>
+                    <a href="https://synotex.com/product/detail.html?product_no=510&cate_no=1&display_group=2" target="_blank">
+                        <img src="{% static 'synotex_water.png' %}" class="img-fluid advertisement-image">
                     </a>
                 </div>
             </div>
@@ -701,7 +506,9 @@
     </div>
 </div>
 <div class="footer">
-    <p>상호명: 알파비트 | 대표: 김민석 | 알파비트는 인공지능 및 비트코인 정보공유 플랫폼입니다. 본 지표와 봇들은 투자 권유용이 아닙니다. 투자는 항상 본인이 신중하게 결정해서 하시길 바랍니다.</p>
+    <p>상호명: SYNOTEX | 대표자: 이진희 | 사업자등록번호: 211-88-02872 | 통신판매업신고번호: 제2011-서울강남-03481호 [사업자정보확인] | 고객센터: 070-7491-1237 </p>
+    <p>주소: 06168 서울특별시 강남구 삼성로96길 6 (삼성동) LG트윈텔1 1710호 | 개인정보보호책임자: 이용준(paxx@synopex.com) | 입금계좌: 국민은행 590201-04-028920 | 구매안전(에스크로)서비스 정보:  KG 모빌리언스 가입확인</p>
+    <p>※ SYNOTEX에서 제공하는 모든 컨텐츠는 저작권법에 보호받는 저작물로서, 무단으로 복제, 배포하는 경우에는 저작권법에 의하여 처벌을 받을 수 있습니다. Copyright © 2020 SYNOTEX. All rights reserved.</p>
 </div>
 {% endblock %}
 
@@ -808,6 +615,53 @@ function fetchNewsAndSentiment() {
         // Hide the loading indicator even if there is an error
         loadingIndicator.style.display = "none";
     });
+
+    // Add the code for the new line charts here
+    // Plotting 유저의 몸무게 변화
+    var ctxWeight = document.getElementById('weightChangeChart').getContext('2d');
+    var weightChangeChart = new Chart(ctxWeight, {
+        type: 'line',
+        data: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+            datasets: [{
+                label: '몸무게 (kg)',
+                data: [84, 85, 85, 87, 85],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+
+    // Plotting 유저의 섭취 칼로리 변화
+    var ctxCalorie = document.getElementById('calorieIntakeChart').getContext('2d');
+    var calorieIntakeChart = new Chart(ctxCalorie, {
+        type: 'line',
+        data: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+            datasets: [{
+                label: '섭취 칼로리 (kcal)',
+                data: [3000, 3500, 6000, 5000, 3000],
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
 }
 
 function fetchTechnicalAIResponse() {
@@ -815,8 +669,14 @@ function fetchTechnicalAIResponse() {
     document.getElementById('TechnicalLoading').style.display = 'block';
     document.getElementById('TechnicalAIResponse').innerHTML = ''; // Clear previous response
 
-    // Make the AJAX request
-    fetch('{% url "aiphabtc:fetch_gpt_analysis" %}')
+    // Use the updated dropdown ID 'citySelection'
+    var city = document.getElementById('citySelection').value;
+
+    // Append the selected city as a query parameter to the URL for the AJAX request
+    var url = `{% url 'aiphabtc:fetch_gpt_analysis' %}?city=${city}`;
+
+    // Make the AJAX request with the city parameter
+    fetch(url)
     .then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -864,5 +724,6 @@ function initializePieChart() {
         }
     });
 }
+
 </script>
 {% endblock %}

@@ -26,7 +26,7 @@ def answer_create(request, question_id):
             score_obtained = 1
             reason = ""
             profile = request.user.profile
-            if question.board.name in ["general_qa"]:
+            if question.board.name in ["health_question_and_answers"]:
                 profile.score += 4
                 score_obtained = 4
                 reason = "질문과 답변 게시글에 답변 작성 보상"
@@ -75,7 +75,7 @@ def answer_delete(request, answer_id):
         profile = request.user.profile
         score_obtained = -1
         reason = ""
-        if answer.question.board.name in ["general_qa"]:
+        if answer.question.board.name in ["health_question_and_answers"]:
             profile.score -= 4  # Subtract the points for a general_qa board
             score_obtained = -4
             reason = "질문과 답변 게시판에서 답글 삭제 보상 철회"

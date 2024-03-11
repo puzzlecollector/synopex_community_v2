@@ -33,7 +33,7 @@ from xgboost import XGBClassifier
 import lightgbm as lgb
 from common.models import PointTokenTransaction
 from django.db.models import Q
-
+import json
 
 # it says bitget, but we are using coinbase data
 # rule: korean exchange - upbit, american exchange - coinbase
@@ -56,46 +56,48 @@ def get_articles(headers, url):
     news_req = requests.get(url, headers=headers)
     soup = BeautifulSoup(news_req.content, "html.parser")
     # Extracting title
-    title = soup.find("h1", {"class": "view_top_title noselect"}).text.strip()
-    # Finding the specific <div>
-    article_content_div = soup.find('div', class_='article_content', itemprop='articleBody')
+    title = soup.find("h1", {"class": "h_title"}).text.strip()
+    # Finding the specific parent <div>
+    article_content_div = soup.find('div', class_='par')
     content = ""  # Initialize content as empty string
-    # Check if the div was found
+
+    # Check if the parent div was found
     if article_content_div:
-        # Extracting text from all <p> tags within the <div>
-        p_tags = article_content_div.find_all('p')
-        for p in p_tags:
-            content += p.get_text(strip=True) + " "  # Appending each <p> content with a space for readability
+        # Extracting text from all child <div> tags within the <div class="par">, ignoring those with a class attribute
+        child_divs = article_content_div.find_all('div', class_=False,
+                                                  recursive=False)  # recursive=False ensures we only look at direct children
+        for div in child_divs:
+            # You may want to further refine how you extract text, depending on structure
+            content += div.get_text(strip=True) + " "  # Appending each <div> content with a space for readability
 
         # Optionally, remove specific unwanted text
         unwanted_text = "이 광고는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
         content = content.replace(unwanted_text, "").strip()
     else:
         content = "No content found in the specified structure."
+
     return title, content
 
 def scrape_tokenpost():
     all_titles, all_contents, all_full_times = [], [], []
-    for i in tqdm(range(1, 2), desc="Scraping content from tokenpost"):
+    for i in tqdm(range(1, 2), desc="Scraping content from chosun"):
         try:
             links = []
-            url = f"https://www.tokenpost.kr/coinness?page={i}"
+            url = f"https://health.chosun.com/list.html"
             headers = {'User-Agent': 'Mozilla/5.0'}
             news_req = requests.get(url, headers=headers)
             soup = BeautifulSoup(news_req.content, "html.parser")
-            elems = soup.find_all("div", {"class": "list_left_item"})
+            elems = soup.find_all("div", {"class": "latest-list area-part"})
             for e in elems:
-                article_elems = e.find_all("div", {"class": "list_item_text"})
+                article_elems = e.find_all("div", {"class": "inn"})
                 for article in article_elems:
                     title_link = article.find("a", href=True)
-                    if title_link and '/article-' in title_link['href']:
-                        full_link = 'https://www.tokenpost.kr' + title_link['href']
-                        # Find the date element in the parent of the article
-                        date_elem = article.parent.find("span", {"class": "day"})
-                        news_date = parser.parse(date_elem.text)
-                        links.append(full_link)
-                        all_full_times.append(news_date)
-                    if len(all_full_times) > 4:
+                    full_link = "https://health.chosun.com/" + title_link['href']
+                    links.append(full_link)
+                    date_elem = article.find("span", {"class": "date"})
+                    news_date = parser.parse(date_elem.text)
+                    all_full_times.append(news_date)
+                    if len(all_full_times) > 7:
                         break
             for link in links:
                 try:
@@ -104,12 +106,13 @@ def scrape_tokenpost():
                     all_contents.append(content)
                 except Exception as e:
                     print(f"Error while scraping news content: {e}")
+
         except Exception as e:
             print(f"Error while scraping page {i}: {e}")
         time.sleep(0.1)
 
-    if len(all_titles) == 0 and len(all_full_times) == 5:
-        for k in range(5):
+    if len(all_titles) != len(all_full_times):
+        for k in range(len(all_full_times)):
             all_titles.append('')
             all_contents.append('')
 
@@ -148,42 +151,21 @@ def get_news_and_sentiment(request):
     }
     return JsonResponse(data)
 
-def get_technical_indicators(timeframe="day"):
-    df = pyupbit.get_ohlcv("KRW-BTC", interval=timeframe)
-    df["SMA_50"] = df["close"].rolling(window=50).mean()
-    df["EMA_50"] = df["close"].ewm(span=50, adjust=False).mean()
-    delta = df["close"].diff()
-    gain = (delta.where(delta > 0, 0)).fillna(0)
-    loss = (-delta.where(delta < 0, 0)).fillna(0)
-    avg_gain = gain.rolling(window=14).mean()
-    avg_loss = loss.rolling(window=14).mean()
-    rs = avg_gain / avg_loss
-    df['RSI'] = 100 - (100 / (1 + rs))
-    df['SMA_20'] = df['close'].rolling(window=20).mean()
-    df['STD_20'] = df['close'].rolling(window=20).std()
-    df['Upper_Bollinger'] = df['SMA_20'] + (df['STD_20'] * 2)
-    df['Lower_Bollinger'] = df['SMA_20'] - (df['STD_20'] * 2)
-    short_ema = df['close'].ewm(span=12, adjust=False).mean()
-    long_ema = df['close'].ewm(span=26, adjust=False).mean()
-    df['MACD'] = short_ema - long_ema
-    df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
-    low_14 = df['low'].rolling(window=14).min()
-    high_14 = df['high'].rolling(window=14).max()
-    df['%K'] = 100 * ((df['close'] - low_14) / (high_14 - low_14))
-    df['%D'] = df['%K'].rolling(window=3).mean()
-    # get last seven rows
-    sample = df.iloc[-7:, 1:]
-    sample_str = sample.to_string(index=False)
-    data = {"output_str": sample_str}
-    return data
 
 def fetch_ai_technical1d(request):
-    technical_data = get_technical_indicators(timeframe="day")
-    technical_output = technical_data["output_str"]
-    message = ("다음과 같은 일봉 비트코인 데이터가 주어졌을때:\n\n"
+    # Get the city name from the request, default to Seoul
+    city = request.GET.get('city', 'Seoul')
+
+    # Pass the city name to the get_weather_dict function
+    weather_data = get_weather_dict(city)
+
+    # Ensure weather_data is a string for formatting in the message
+    weather_data_str = str(weather_data)
+
+    message = ("다음과 같은 날씨 데이터가 주어졌을때:\n\n"
                "{}\n\n"
-               "비트코인 가격 추세를 분석하고 총평을 해줘."
-               ).format(technical_output)
+               "외출할때 어떤 옷을 입어야할지 주의사항은 있는지 알려줘."
+               ).format(weather_data_str)
     openai.api_key = settings.OPENAI_API_KEY
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -217,155 +199,76 @@ def calculate_vote_percentages(voting_options):
     return [(option, (option.vote_count / total_votes) * 100) for option in voting_options]
 
 
-def get_correlation():
-    pearson = spearman = kendall = -100
-    try:
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=30)
+def get_weather_dict(city="Seoul"):
+    apikey = "097da88da3acdf1924aa9569e22f6880"
+    city = city
+    lang = "kr"
+    units = "metric"
+    api = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={apikey}&lang={lang}&units={units}"
+    result = requests.get(api)
+    data = json.loads(result.text)
+    ret_data = {"name": data["name"],
+                "weather": data["weather"][0]["description"],
+                "temperature": data["main"]["temp"],
+                "feels": data["main"]["feels_like"],
+                "min_temp": data["main"]["temp_min"],
+                "max_temp": data["main"]["temp_max"],
+                "humidity": data["main"]["humidity"],
+                "pressure": data["main"]["pressure"],
+                "wind_deg": data["wind"]["deg"],
+                "wind_speed": data["wind"]["speed"]}
+    return ret_data
 
-        # Attempt to fetch NAS100 data
-        NAS100 = yf.download('^NDX', start=start_date, end=end_date)['Close']
+def get_weather(city="Seoul"):
+    apikey = "097da88da3acdf1924aa9569e22f6880"
+    city = city
+    lang = "kr"
+    units = "metric"
+    api = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={apikey}&lang={lang}&units={units}"
+    result = requests.get(api)
+    data = json.loads(result.text)
+    ret_data = {"name": data["name"],
+                "weather": data["weather"][0]["description"],
+                "temperature": data["main"]["temp"],
+                "feels": data["main"]["feels_like"],
+                "min_temp": data["main"]["temp_min"],
+                "max_temp": data["main"]["temp_max"],
+                "humidity": data["main"]["humidity"],
+                "pressure": data["main"]["pressure"],
+                "wind_deg": data["wind"]["deg"],
+                "wind_speed": data["wind"]["speed"]}
+    return JsonResponse({"weather_data":ret_data})
 
-        # Attempt to fetch Bitcoin data
-        df = pyupbit.get_ohlcv("KRW-BTC", count=30, interval="day")
-        btc_close = df["close"].values
-
-        # Ensure both datasets were fetched successfully
-        if len(NAS100) > 0 and len(btc_close) > 0:
-            min_length = min(len(btc_close), len(NAS100))  # Match their length
-
-            # Align data
-            btc_close_aligned = btc_close[-min_length:]
-            NAS100_aligned = NAS100[-min_length:]
-
-            data_aligned = pd.DataFrame({"btc": btc_close_aligned, "nas": NAS100_aligned})
-
-            # Calculate correlations
-            pearson_corr = data_aligned.corr(method='pearson')
-            spearman_corr = data_aligned.corr(method='spearman')
-            kendall_corr = data_aligned.corr(method='kendall')
-
-            pearson = pearson_corr.iloc[0, 1]
-            spearman = spearman_corr.iloc[0, 1]
-            kendall = kendall_corr.iloc[0, 1]
-            return pearson, spearman, kendall
-    except Exception as e:
-        # Handle any exception by logging or printing error message
-        print(f"Error occurred: {e}")
-    return pearson, spearman, kendall
-
-def get_predictions_arima(btc_sequence, p=1, d=1, q=1, steps_ahead=1):
-    try:
-        # Differencing
-        btc_diff = np.diff(btc_sequence, n=d)
-        # Fit ARIMA model
-        model = ARIMA(btc_diff, order=(p, 0, q))
-        fitted_model = model.fit()
-        # Forecast
-        forecast_diff = fitted_model.forecast(steps=steps_ahead)
-        # Invert differencing
-        forecast = [btc_sequence[-1]]
-        for diff in forecast_diff:
-            forecast.append(forecast[-1] + diff)
-        return forecast[1:][0]
-    except Exception as e:
-        print(f"Model fitting failed: {str(e)}")
-        return np.zeros((steps_ahead,))
-
-def get_predictions_mlp(test_input):
-    with open('aiphabtc/mlp_regressor.pkl', 'rb') as model_file:
-        loaded_mlp = pickle.load(model_file)
-    prediction = loaded_mlp.predict(test_input)
-    return prediction
-
-def get_predictions_elasticnet(test_input):
-    with open("aiphabtc/elastic_net.pkl", "rb") as model_file:
-        loaded_elasticnet = pickle.load(model_file) 
-    prediction = loaded_elasticnet.predict(test_input) 
-    return prediction
-
-def preprocess_function(chart_df):
-    days, months = [], []
-    for dt in tqdm(chart_df.index):
-        day = pd.to_datetime(dt).day
-        month = pd.to_datetime(dt).month
-        days.append(day)
-        months.append(month)
-    chart_df["day"] = days
-    chart_df["months"] = months
-
-    delta = chart_df["close"].diff()
-    gain = (delta.where(delta > 0, 0)).fillna(0)
-    loss = (-delta.where(delta < 0, 0)).fillna(0)
-    avg_gain = gain.rolling(window=14).mean()
-    avg_loss = loss.rolling(window=14).mean()
-    rs = avg_gain / avg_loss
-    chart_df['RSI'] = 100 - (100 / (1 + rs))
-
-    chart_df['SMA_20'] = chart_df['close'].rolling(window=20).mean()
-    chart_df['STD_20'] = chart_df['close'].rolling(window=20).std()
-    chart_df['Upper_Bollinger'] = chart_df['SMA_20'] + (chart_df['STD_20'] * 2)
-    chart_df['Lower_Bollinger'] = chart_df['SMA_20'] - (chart_df['STD_20'] * 2)
-    short_ema = chart_df['close'].ewm(span=12, adjust=False).mean()
-    long_ema = chart_df['close'].ewm(span=26, adjust=False).mean()
-    chart_df['MACD'] = short_ema - long_ema
-    chart_df['Signal'] = chart_df['MACD'].ewm(span=9, adjust=False).mean()
-    low_14 = chart_df['low'].rolling(window=14).min()
-    high_14 = chart_df['high'].rolling(window=14).max()
-    chart_df['%K'] = 100 * ((chart_df['close'] - low_14) / (high_14 - low_14))
-    chart_df['%D'] = chart_df['%K'].rolling(window=3).mean()
-
-    for l in tqdm(range(1, 4), position=0, leave=True):
-        for col in ["high", "low", "volume"]:
-            val = chart_df[col].values
-            val_ret = [None for _ in range(l)]
-            for i in range(l, len(val)):
-                if val[i - l] == 0:
-                    ret = 1
-                else:
-                    ret = val[i] / val[i - l]
-                val_ret.append(ret)
-            chart_df["{}_change_{}".format(col, l)] = val_ret
-
-    chart_df.dropna(inplace=True)
-    return chart_df
-
-def get_predictions_xgboost(test_input):
-    loaded_model = XGBClassifier()
-    loaded_model.load_model("aiphabtc/xgb_clf_mainlanding")
-    xgb_prob = loaded_model.predict_proba(test_input)[0]
-    return xgb_prob[0]*100.0, xgb_prob[1]*100.0 # short, long
-
-def get_predictions_lightgbm(test_input):
-    test_lgb = lgb.Booster(model_file="aiphabtc/lightgbm_model.txt")
-    lgb_prob = test_lgb.predict(test_input, num_iteration=test_lgb.best_iteration)[0] # long probability
-    short = 1 - lgb_prob
-    return short * 100.0, lgb_prob * 100.0
-
-def get_predictions_rf(test_input):
-    with open("aiphabtc/rf_model.pkl", "rb") as file:
-        loaded_rf = pickle.load(file)
-    rf_prob = loaded_rf.predict_proba(test_input)[0]
-    short, long = rf_prob[0], rf_prob[1]
-    return short * 100.0, long * 100.0
 
 def index(request):
-    boards = Board.objects.all()
+    # Define the list of board names you're interested in
+    board_names = [
+        'diet_logs',
+        'exercise_log',
+        'research_paper_sharing_board',
+        'weight_disease_stress',
+        'insurance_policy_information',
+        'health_question_and_answers',
+        'hospital_and_medicine',
+        'struggle_stories'
+    ]
+    # Filter boards to only include those with names in the board_names list
+    boards = Board.objects.filter(name__in=board_names)
     board_posts = {}
     for board in boards:
         # Fetch the top 3 posts for each board
         posts = Question.objects.filter(board=board).order_by('-create_date')[:3]
         board_posts[board] = posts
-        
-    url_fng = "https://api.alternative.me/fng/?limit=7&date_format=kr"
-    response_fng = requests.get(url_fng)
-    data_fng = response_fng.json().get('data', [])
-    
-    url_global = "https://api.coinlore.net/api/global/"
-    response_global = requests.get(url_global)
-    data_global = response_global.json()
 
-    kimchi_data = get_kimchi_data()
+    # List of cities
+    cities = ['Seoul', 'Busan', 'Incheon', 'Daegu', 'Daejeon', 'Gwangju', 'Suwon', 'Ulsan', 'Seongnam',
+              'Goyang', 'Yongin', 'Cheongju', 'Jeonju', 'Changwon', 'Ansan', 'Anyang', 'Namyangju',
+              'Hwaseong', 'Paju', 'Pyeongtaek']
+
+    # Fetch weather data for the selected city or Seoul by default
+    selected_city = request.GET.get('city', 'Seoul')
+    weather_data = get_weather(selected_city).content
+    weather_data = json.loads(weather_data.decode('utf-8'))['weather_data']
 
     sentiment_voting_options = VotingOption.objects.all()
     sentiment_votes = VotingOption.objects.annotate(vote_count=Count("votes")).order_by("-vote_count")
@@ -375,59 +278,13 @@ def index(request):
         "data": [percentage for _, percentage in sentiment_votes_with_percentages]
     }
 
-    pearson, spearman, kendall = get_correlation()
-
-    df = pyupbit.get_ohlcv("KRW-BTC", interval="day")
-    previous_btc_close = df["close"].values[-2]
-    preprocessed_df = preprocess_function(df)
-    clf_test_input = preprocessed_df.iloc[-2].values.reshape((1, -1))
-
-    # ARIMA prediction
-    btc_sequence = df["close"].values[:-1]
-    arima_prediction = get_predictions_arima(btc_sequence)
-    arima_percentage_change = (arima_prediction - previous_btc_close) / previous_btc_close * 100.0
-
-    # MLP prediction
-    mlp_test_input = df[["open", "high", "low", "close", "volume"]].iloc[-2].values.reshape((1, -1))
-    mlp_prediction = get_predictions_mlp(mlp_test_input)
-    mlp_percentage_change = (mlp_prediction - previous_btc_close) / previous_btc_close * 100.0
-
-    # ElasticNet prediction
-    elasticnet_test_input = df[["open", "high", "low", "close", "volume"]].iloc[-2].values.reshape((1, -1))
-    elasticnet_prediction = get_predictions_elasticnet(elasticnet_test_input)
-    elasticnet_percentage_change = (elasticnet_prediction - previous_btc_close) / previous_btc_close * 100.0
-
-    # XGBoost prediction
-    xgb_short, xgb_long = get_predictions_xgboost(clf_test_input)
-
-    # LightGBM prediction
-    lgb_short, lgb_long = get_predictions_lightgbm(clf_test_input)
-
-    # RandomForest prediction
-    rf_short, rf_long = get_predictions_rf(clf_test_input)
-
     context = {
         "board_posts": board_posts,
-        "data_fng": data_fng,
-        "data_global": data_global,
-        "kimchi_data": kimchi_data,
         "sentiment_voting_options": sentiment_voting_options,
-        "sentiment_data": sentiment_data,
-        "pearson": pearson,
-        "spearman": spearman,
-        "kendall": kendall,
-        "arima_prediction": arima_prediction,
-        "arima_percentage_change": arima_percentage_change,
-        "mlp_prediction": mlp_prediction,
-        "mlp_percentage_change": mlp_percentage_change,
-        "elasticnet_prediction": elasticnet_prediction,
-        "elasticnet_percentage_change": elasticnet_percentage_change,
-        "xgb_short": xgb_short,
-        "xgb_long": xgb_long,
-        "lgb_short": lgb_short,
-        "lgb_long": lgb_long,
-        "rf_short": rf_short,
-        "rf_long": rf_long,
+        "sentiment_data": sentiment_data, 
+        "weather_data": weather_data,
+        "cities": cities,
+        "selected_city": selected_city,
     }
     return render(request, 'index.html', context)
 
