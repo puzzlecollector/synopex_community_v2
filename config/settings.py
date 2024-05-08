@@ -139,4 +139,4 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-OPENAI_API_KEY = "sk-proj-DiGFuUwML3elofKRG7nQT3BlbkFJPmkSkfpk6PTRv1Apgilm" # because openai removes it if exposed
+OPENAI_API_KEY = "<MASKED>" # because openai removes it if exposed
