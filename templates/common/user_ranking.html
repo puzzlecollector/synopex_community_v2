@@ -25,7 +25,7 @@
                 {% for profile in page_obj %}
                 <tr>
                     <th scope="row">{{ forloop.counter }}</th>
-                    <td><a href="{% url 'aiphabtc:profile_detail' profile.user.id %}">{{ profile.user.username }}</a></td>
+                    <td><a href="{% url 'community:profile_detail' profile.user.id %}">{{ profile.user.username }}</a></td>
                     <td>{{ profile.score }}</td>
                     <td>{{ profile.get_tier }}</td>
                 </tr>

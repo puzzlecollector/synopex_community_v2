@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% load aiphabtc_filter %}
+{% load community_filter %}
 {% load humanize %}
 
 {% block head %}
@@ -35,22 +35,23 @@
         color: #666;
         font-size: 0.9em;
     }
-    /* Tooltip styling */
+
+
     .title-cell:hover::after {
         content: attr(data-tooltip);
         position: absolute;
-        left: 50%; /* Start from the middle of the cell */
-        transform: translateX(-50%); /* Center the tooltip */
-        bottom: 100%; /* Position above the title */
-        margin-bottom: 10px; /* Lift the tooltip up */
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 100%;
+        margin-bottom: 10px;
         background-color: #333;
         color: white;
-        padding: 10px 15px;
-        border-radius: 6px;
-        font-size: 0.9em;
+        padding: 12px 18px; /* Increased padding */
+        border-radius: 8px;
+        font-size: 0.95em; /* Slightly larger font size */
         z-index: 10;
         box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-        max-width: 400px;
+        max-width: 500px; /* Set a fixed max-width */
         white-space: normal;
         text-align: left;
         overflow-y: auto;
@@ -58,10 +59,12 @@
         opacity: 0;
         visibility: hidden;
     }
+
     .title-cell:hover::after {
         opacity: 1;
         visibility: visible;
     }
+
     .sentiment-scores {
         margin: 20px 0;
     }
@@ -219,6 +222,16 @@
         color: #333;
         border-radius: 5px; /* Optional: if your chart containers have border-radius */
     }
+
+    .column-divider:not(:last-child) {
+        border-right: 2px solid #dee2e6;
+    }
+
+    .list-group-item-popular {
+        background-color: #fff5f5; /* Light red background */
+        border-left: 3px solid red; /* Red line on the left side */
+    }
+
 </style>
 {% endblock %}
 
@@ -232,223 +245,124 @@
         {% endfor %}
     {% endif %}
     <div class="row">
-        <div class="col-lg-6">
-            <h3>헬스케어 대시보드</h3>
+        <div class="col-lg-12">
+            <h3>시노펙스 신장투석 커뮤니티</h3>
             <hr>
-            <div class="weather-info my-4">
-                <h5 class="mb-3">오늘의 날씨</h5>
-                <div class="mb-4">
-                    <label for="citySelection" class="form-label"><strong>지역 선택:</strong></label>
-                    <select class="form-select" id="citySelection" onchange="window.location.href='?city=' + this.value;">
-                        {% for city in cities %}
-                            <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <th scope="row">지역</th>
-                            <td>{{ weather_data.name }}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">상태</th>
-                            <td>{{ weather_data.weather }}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">온도</th>
-                            <td>{{ weather_data.temperature }}°C (체감: {{ weather_data.feels }}°C)</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">최저/최고 온도</th>
-                            <td>{{ weather_data.min_temp }}°C / {{ weather_data.max_temp }}°C</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">습도</th>
-                            <td>{{ weather_data.humidity }}%</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">풍속</th>
-                            <td>{{ weather_data.wind_speed }}m/s</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">풍향</th>
-                            <td>{{ weather_data.wind_deg }}°</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div style="text-align: left; margin-top: 10px; margin-botton: 10px;">
-                <button id="fetchTechnicalAIResponse" class="btn btn-primary">AI 날씨 정보 해석</button>
-                <div id="TechnicalLoading" style="display:none;">AI가 분석중... 시간이 조금만 기다려주세요!</div>
-            </div>
-            <!-- GPT 일봉 추세 분석 -->
-            <p id="TechnicalAIResponse">{{ technical_chat_message }}</p>
-            <br>
             <div class="row">
-                <div class="col-12 advertisement-container">
-                    <div class="ad-label"><strong>[광고] 시노텍스 마스크 제품 가상착용, 날씨랑 미세먼지 확인은 간편하게 어플에서!</strong></div>
-                    <a href="https://play.google.com/store/apps/details?id=com.lynxbus" target="_blank">
-                        <img src="{% static 'synotex_maskapp_ad.png' %}" class="img-fluid advertisement-image">
-                    </a>
+                <div class="col-lg-6 column-divider">
+                    <div class="weather-info my-4">
+                        <h5 class="mb-3" style="text-align: center;">오늘의 날씨</h5>
+                        <div class="mb-4">
+                            <label for="citySelection" class="form-label"><strong>지역 선택:</strong></label>
+                            <select class="form-select" id="citySelection" onchange="window.location.href='?city=' + this.value;">
+                                {% for city in cities %}
+                                    <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">지역</th>
+                                    <td>{{ weather_data.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">상태</th>
+                                    <td>{{ weather_data.weather }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">온도</th>
+                                    <td>{{ weather_data.temperature }}°C (체감: {{ weather_data.feels }}°C)</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">최저/최고 온도</th>
+                                    <td>{{ weather_data.min_temp }}°C / {{ weather_data.max_temp }}°C</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">습도</th>
+                                    <td>{{ weather_data.humidity }}%</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">풍속</th>
+                                    <td>{{ weather_data.wind_speed }}m/s</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">풍향</th>
+                                    <td>{{ weather_data.wind_deg }}°</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 advertisement-container">
+                            <div class="ad-label"><strong>[광고] 시노텍스 마스크 제품 가상착용, 날씨랑 미세먼지 확인도 간편하게 어플에서!</strong></div>
+                            <a href="https://play.google.com/store/apps/details?id=com.lynxbus" target="_blank">
+                                <img src="{% static 'synotex_maskapp_ad.png' %}" class="img-fluid advertisement-image">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="container mt-3">
+                        <h4 class="mb-3"><span style="color: red;">⭐ 인기글 ⭐</span></h4>
+                                    <ul class="list-group list-group-flush">
+                            {% for post in popular_posts %}
+                            <li class="list-group-item list-group-item-popular">
+                                <a href="{% url 'community:detail' post.id %}">
+                                    {{ post.subject }}
+                                </a>
+                                <span class="badge bg-danger float-end">{{ post.create_date|date:"Y-m-d" }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">인기글이 없습니다.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <br>
+                    <div class="row">
+                        <div class="col-12 advertisement-container">
+                            <div class="ad-label"><strong>[대한신장학회] 투석전문의/인공신장실 찾기</strong></div>
+                            <a href="https://www.kords-ksn.co.kr/Hospital/HospitalList_HD.php" target="_blank">
+                                <!-- Inline style added to reduce height -->
+                                <img src="{% static 'search_hospitals.jpeg' %}" class="img-fluid advertisement-image" style="height: 150px; object-fit: contain;">
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <hr style="height: 3px; background-color: green;">
-            <p>
-                <a href="https://health.chosun.com/list.html" target="_blank" style="text-decoration: none; color: inherit;">
-                    <img src="{% static 'health_chosun.png' %}" alt="healthchosun Icon" style="vertical-align: middle; margin-right: 5px; height: 30px;">
-                </a>
-                <strong>최신 헬스케어 뉴스</strong>
-                <div class="d-flex justify-content-center">
-                    <div class="news-table w-100">
-                        <div class="loading-indicator" style="display: none; text-align: center;">최신 뉴스를 읽어오는 중입니다... 조금만 기다려주세요!</div>
-                        {% for item in scraped_data %}
-                            <div class="news-row">
-                                <div class="news-cell title-cell" data-tooltip="{{ item.contents }}">
-                                    <span class="news-title">{{ item.titles }}</span>
-                                </div>
-                                <div class="news-cell datetime-cell">
-                                    <span class="news-datetime">{{ item.datetimes|date:"Y-m-d H:i" }}</span>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </p>
-            <div class="container mt-3">
-                <h5>{% if user.is_authenticated %}{{ user.username }}{% else %}user{% endif %}의 몸무게 변화</h5>
-                {% if user.is_authenticated %}
-                <canvas id="weightChangeChart"></canvas>
-                {% else %}
-                <div class="blur-effect" style="height: 200px; position: relative;">
-                    <canvas id="weightChangeChartblurred"></canvas>
-                    <div class="login-overlay"><a href="{% url 'common:login' %}">확인하려면 로그인하세요</a></div>
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="container mt-3">
-                <h5>{% if user.is_authenticated %}{{ user.username }}{% else %}user{% endif %}의 섭취 칼로리 변화</h5>
-                {% if user.is_authenticated %}
-                <canvas id="calorieIntakeChart"></canvas>
-                {% else %}
-                <div class="blur-effect" style="height: 200px; position: relative;">
-                    <canvas id="calorieIntakeChartblurred"></canvas>
-                    <div class="login-overlay"><a href="{% url 'common:login' %}">확인하려면 로그인하세요</a></div>
-                </div>
-                {% endif %}
-            </div>
-
-            <hr style="height: 3px; background-color: green;">
-            <div class="row">
-                <div class="col-md-6 advertisement-container">
-                    <div class="ad-label"><strong>[광고] 인류의 건강한 삶의 기여하는 시노텍스</strong></div>
-                    <a href="https://synotex.com/product/detail.html?product_no=357&cate_no=1&display_group=2" target="_blank">
-                        <img src="{% static 'synotex_pure_water.png' %}" class="img-fluid advertisement-image">
-                    </a>
-                </div>
-                <div class="col-md-6 advertisement-container">
-                    <div class="ad-label"><strong>[광고] 인류의 건강한 삶의 기여하는 시노텍스</strong></div>
-                    <a href="https://synotex.com/product/detail.html?product_no=377&cate_no=1&display_group=2" target="_blank">
-                        <img src="{% static 'synotex_shower_hose.png' %}" class="img-fluid advertisement-image">
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <h3>커뮤니티 게시판</h3>
-            <hr>
-            <small>건강관리, 당뇨와 혈당관리, 신장투석 관련 더 다양한 커뮤니티도 참고해보세요</small>
-            <div class="btn-group mb-3 d-inline-block" role="group" aria-label="Platform Toggle">
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'dr_diary.png' %}" alt="coinpickle Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://web.drdiary.co.kr/feed">닥터다이어리</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static '365health.png' %}" alt="365health Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="http://www.365healthcare.co.kr/index.php?channel=community_board&code=health_info">365 Healthcare</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'walkon.png' %}" alt="coinglass Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://swallaby.com/index2">워크온</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                        <img src="{% static 'diabetes.png' %}" alt="coinness Icon" style="height: 30px; margin-right: 5px;">
-                        <a href="https://danggun.kr/">당뇨와건강</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'sense_diary.png' %}" alt="sensediary Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://sensdiary.co.kr/bbs/board.php?bo_table=member_qna&page=1">센스 다이어리</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'korean_kidney.png' %}" alt="kidney Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://ksn.or.kr/general/">대한신장학회</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'dr_cho.png' %}" alt="drcho Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="http://xn--zv4b80g.com/common/renal_failure.html">조병수의원</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'naver.png' %}" alt="naver Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://blog.naver.com/donorlove/221455337537">신장질환과 신장이식수술 Q&A</a>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">
-                    <img src="{% static 'aha.png' %}" alt="aha Icon" style="height: 30px; margin-right: 5px;">
-                    <a href="https://blog.naver.com/donorlove/221455337537">아하 현직 의사 의료 Q&A</a>
-                </button>
-            </div>
-            <br>
-            <!-- add search bar -->
-            <div class="search-container">
-                <form action="{% url 'aiphabtc:search_results' %}" method="get" class="row gx-2">
-                    <div class="col">
-                        <input class="form-control form-control-lg" type="search" placeholder="Search" aria-label="Search" name="q">
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">포스트 검색</button>
-                    </div>
-                </form>
-            </div>
-            <br>
             <div class="row">
                 {% for board, posts in board_posts.items %}
                 <div class="col-6 mb-4">
                     <div class="card h-100">
                         <div class="card-header">
                             <h5>
-                                {% if board.name == 'diet_logs' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'diet_logs' %}">체중 관리팁</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="건강한 체중 관리를 위한 유용한 팁을 공유하는 커뮤니티입니다">[?]</span>
-                                {% elif board.name == 'exercise_log' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'exercise_log' %}">운동 기록 공유</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="운동 인증 사진과 오운완(오늘의 운동 완료)을 공유하며 서로를 독려하는 공간입니다">[?]</span>
-                                {% elif board.name == 'research_paper_sharing_board' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'research_paper_sharing_board' %}">논문과 정보공유 게시판</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="최신 논문과 건강 정보를 공유하며 지식을 넓히는 커뮤니티입니다">[?]</span>
-                                {% elif board.name == 'weight_disease_stress' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'weight_disease_stress' %}">질환과 스트레스 극복</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="질병과 스트레스를 극복하기 위한 방법과 경험을 나누는 커뮤니티입니다.">[?]</span>
-                                {% elif board.name == 'insurance_policy_information' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'insurance_policy_information' %}">보험과 정책 정보</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="건강 보험과 관련 정책에 대한 최신 정보를 제공하는 커뮤니티입니다">[?]</span>
-                                {% elif board.name == 'health_question_and_answers' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'health_question_and_answers' %}">질문과 답변</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="의료 및 건강관련 질문에 전문가와 회원들이 답변하는 질의응답 커뮤니티입니다">[?]</span>
-                                {% elif board.name == 'hospital_and_medicine' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'hospital_and_medicine' %}">병원과 의약품 정보</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="병원과 의약품에 대한 리뷰와 정보를 공유하는 커뮤니티입니다">[?]</span>
-                                {% elif board.name == 'struggle_stories' %}
-                                <a href="{% url 'aiphabtc:board_filtered' 'struggle_stories' %}">투병 이야기</a>
-                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="병마와 싸우는 이들의 경험과 이야기를 나누는 위로와 공감의 공간입니다">[?]</span>
+                                {% if board.name == 'free_board' %}
+                                <a href="{% url 'community:board_filtered' 'free_board' %}">자유게시판</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="자유로운 주제에 대해서 글을 올릴 수 있는 게시판 입니다.">[?]</span>
+                                {% elif board.name == 'question_and_answer' %}
+                                <a href="{% url 'community:board_filtered' 'question_and_answer' %}">신장투석 Q&A</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="신장투석 관련 혹은 다양한 건강관련 질문들을 올려주시면 전문 의료진들과 사이트 회원들이 답변을 작성할 수 있는 게시판입니다.">[?]</span>
+                                {% elif board.name == 'battle_board' %}
+                                <a href="{% url 'community:board_filtered' 'battle_board' %}">투병 이야기</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="투석 환자들이 본인의 투병 생활과 경험을 공유하는 곳입니다.">[?]</span>
+                                {% elif board.name == 'study_board' %}
+                                <a href="{% url 'community:board_filtered' 'study_board' %}">스터디 게시판</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="신장투석, 신장질환, 건강상식 관련 논문과 연구자료, 흥미로운 글들을 공유하는 곳입니다.">[?]</span>
+                                {% elif board.name == 'healthcare_information' %}
+                                <a href="{% url 'community:board_filtered' 'healthcare_information' %}">헬스케어 종합정보</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="병원과 의약품, 보험과 정책 관련 정보입니다.">[?]</span>
+                                {% elif board.name == 'guidelines' %}
+                                <a href="{% url 'community:board_filtered' 'guidelines' %}">공지사항</a>
+                                <span style="color: black; cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="시노펙스 커뮤니티측에서 공유하는 공지사항 입니다.">[?]</span>
                                 {% else %}
-                                {{ board.name }}
                                 {% endif %}
                             </h5>
                         </div>
                         <ul class="list-group list-group-flush">
                             {% for post in posts %}
                             <li class="list-group-item">
-                                <a href="{% url 'aiphabtc:detail' post.id %}">
+                                <a href="{% url 'community:detail' post.id %}">
                                     {{ post.subject }}
                                 </a>
                                 <span class="badge bg-info float-end">{{ post.create_date|date:"Y-m-d" }}</span>
@@ -461,47 +375,87 @@
                 </div>
                 {% endfor %}
             </div>
-            <div>
-                <strong>오늘 기분이 어떠신가요?</strong>
-                <div class="voting-container">
-                    <form id="sentimentVoteForm" action="{% url 'aiphabtc:submit_sentiment_vote' %}" method="post">
-                        {% csrf_token %}
-                        {% for option in sentiment_voting_options %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="sentimentVoteOption" id="sentimentVoteOption{{ option.id }}" value="{{ option.id }}">
-                            <label class="form-check-label" for="sentimentVoteOption{{ option.id }}">
-                                {{ option.name }}
-                            </label>
+
+            <hr style="height: 3px; background-color: green;">
+            <div class="row">
+                <div class="col-lg-6 column-divider">
+                    <a href="https://health.chosun.com/list.html" target="_blank" style="text-decoration: none; color: inherit;">
+                        <img src="{% static 'health_chosun.png' %}" alt="healthchosun Icon" style="vertical-align: middle; margin-right: 5px; height: 30px;">
+                    </a>
+                    <strong>오늘의 건강상식 관련 뉴스</strong>
+                    <div class="d-flex justify-content-center">
+                        <div class="news-table w-100">
+                            <div class="loading-indicator" style="display: none; text-align: center;">최신 뉴스를 읽어오는 중입니다... 조금만 기다려주세요!</div>
+                            {% for item in scraped_data %}
+                                <div class="news-row">
+                                    <div class="news-cell title-cell" data-tooltip="{{ item.contents }}">
+                                        <span class="news-title">{{ item.titles }}</span>
+                                    </div>
+                                    <div class="news-cell datetime-cell">
+                                        <span class="news-datetime">{{ item.datetimes|date:"Y-m-d H:i" }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
-                        <button type="submit" class="btn btn-primary btn-block">Submit Vote</button>
-                    </form>
-                </div>
-                <button class="btn btn-info mt-3" type="button" data-toggle="collapse" data-target="#sentimentResults" aria-expanded="false" aria-controls="sentimentResults">
-                    유저 누적 투표 결과 보기 (%)
-                </button>
-                <div class="collapse" id="sentimentResults">
-                    <div class="card card-body">
-                        <canvas id="sentimentPieChart"></canvas> <!-- Canvas for Chart.js -->
                     </div>
                 </div>
+                <div class="col-lg-6">
+                    <div class="row">
+                        {% for board, posts in story_posts.items %}
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5>
+                                        {% if board.name == 'synopex_story' %}
+                                        <a href="{% url 'community:board_filtered' 'synopex_story' %}">시노펙스 이야기</a>
+                                        {% endif %}
+                                    </h5>
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    {% for post in posts %}
+                                    <li class="list-group-item">
+                                        <a href="{% url 'community:detail' post.id %}">
+                                            {{ post.subject }}
+                                        </a>
+                                        <span class="badge bg-info float-end">{{ post.create_date|date:"Y-m-d" }}</span>
+                                    </li>
+                                    {% empty %}
+                                    <li class="list-group-item">No posts yet</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <br>
+                </div>
             </div>
-            <hr>
-            <!-- add advertisement banners here -->
+            <hr style="height: 3px; background-color: green;">
             <div class="row">
-                <div class="col-md-6 advertisement-container">
-                    <div class="ad-label"><strong>[광고] 인류의 건강한 삶의 기여하는 시노텍스</strong></div>
-                    <a href="https://synotex.com/product/detail.html?product_no=315&cate_no=1&display_group=2" target="_blank">
-                        <img src="{% static 'synotex_mask.png' %}" class="img-fluid advertisement-image">
+                <div class="col-md-3 advertisement-container">
+                    <div class="ad-label"><strong>[광고] 당신의 건강한 삶에 기여하는 시노텍스</strong></div>
+                    <a href="https://synotex.com/product/detail.html?product_no=357&cate_no=1&display_group=2" target="_blank">
+                        <img src="{% static 'synotex_pure_water.png' %}" class="img-fluid advertisement-image">
                     </a>
                 </div>
-                <div class="col-md-6 advertisement-container">
-                    <div class="ad-label"><strong>[광고] 인류의 건강한 삶의 기여하는 시노텍스</strong></div>
-                    <a href="https://synotex.com/product/detail.html?product_no=510&cate_no=1&display_group=2" target="_blank">
+                <div class="col-md-3 advertisement-container">
+                    <div class="ad-label"><strong>[광고] 당신의 건강한 삶에 기여하는 시노텍스</strong></div>
+                    <a href="https://synotex.com/product/detail.html?product_no=377&cate_no=1&display_group=2" target="_blank">
+                        <img src="{% static 'synotex_shower_hose.png' %}" class="img-fluid advertisement-image">
+                    </a>
+                </div>
+                <div class="col-md-3 advertisement-container">
+                    <div class="ad-label"><strong>[광고] 당신의 건강한 삶에 기여하는 시노텍스</strong></div>
+                    <a href="https://synotex.com/product/detail.html?product_no=377&cate_no=1&display_group=2" target="_blank">
                         <img src="{% static 'synotex_water.png' %}" class="img-fluid advertisement-image">
                     </a>
                 </div>
+                <div class="col-md-3 advertisement-container">
+                    <div class="ad-label"><strong>[광고] 당신의 건강한 삶에 기여하는 시노텍스</strong></div>
+                    <a href="https://synotex.com/product/detail.html?product_no=377&cate_no=1&display_group=2" target="_blank">
+                        <img src="{% static 'synotex_mask.png' %}" class="img-fluid advertisement-image">
+                    </a>
+                </div>
             </div>
+            <hr style="height: 3px; background-color: green;">
         </div>
     </div>
 </div>
@@ -535,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault(); // Prevent the default form submission
         const formData = new FormData(this); // 'this' refers to the form element
 
-        fetch("{% url 'aiphabtc:submit_sentiment_vote' %}", {
+        fetch("{% url 'community:submit_sentiment_vote' %}", {
             method: 'POST',
             credentials: 'include', // Needed for including cookies (CSRF token)
             body: formData,
@@ -563,7 +517,7 @@ function fetchNewsAndSentiment() {
     const loadingIndicator = document.querySelector('.loading-indicator');
     loadingIndicator.style.display = 'block'; // Show loading indicator
 
-    fetch('{% url "aiphabtc:get_news_and_sentiment" %}')
+    fetch('{% url "community:get_news_and_sentiment" %}')
     .then(response => response.json())
     .then(data => {
         // Hide the loading indicator
@@ -673,7 +627,7 @@ function fetchTechnicalAIResponse() {
     var city = document.getElementById('citySelection').value;
 
     // Append the selected city as a query parameter to the URL for the AJAX request
-    var url = `{% url 'aiphabtc:fetch_gpt_analysis' %}?city=${city}`;
+    var url = `{% url 'community:fetch_gpt_analysis' %}?city=${city}`;
 
     // Make the AJAX request with the city parameter
     fetch(url)
@@ -693,37 +647,8 @@ function fetchTechnicalAIResponse() {
     .catch((error) => {
         console.error('Error:', error);
         document.getElementById('TechnicalLoading').style.display = 'none';
-        document.getElementById('TechnicalAIResponse').innerHTML = 'Sorry, there was a problem fetching the analysis.';
+        document.getElementById('TechnicalAIResponse').innerHTML = '죄송합니다. 분석을 하는데 문제가 발생했습니다.';
     });
 }
-
-function initializePieChart() {
-    // Assuming 'sns_data' and 'sentiment_data' are available and properly formatted
-    var ctxSentiment = document.getElementById("sentimentPieChart").getContext("2d");
-    // Ensure the data is correctly formatted and passed here
-    var sentimentData = {
-        datasets: [{
-            data: {{ sentiment_data.data|safe }}, // Assuming sns_data.data is an array of numbers
-            backgroundColor: [
-                'darkgreen', // Dark Green
-                'green',     // Green
-                'red',       // Red
-                'darkred',    // Dark Red
-                'grey',      // Grey
-            ],
-        }],
-        labels: {{ sentiment_data.labels|safe }}, // Assuming sentiment_data.labels is an array of strings
-    };
-
-    new Chart(ctxSentiment, {
-        type: "pie",
-        data: sentimentData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false, // Adjusted for better responsiveness
-        }
-    });
-}
-
 </script>
 {% endblock %}

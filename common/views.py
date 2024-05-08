@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from datetime import timedelta
 from django.utils.timezone import now, localtime
-from aiphabtc.models import Question, Answer, Comment
+from community.models import Question, Answer, Comment
 from django.core.paginator import Paginator
 from django.utils.safestring import mark_safe
 import requests

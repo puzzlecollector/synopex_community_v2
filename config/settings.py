@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'background_task',
     'common.apps.CommonConfig',
     'widget_tweaks', 
-    'aiphabtc.apps.AiphabtcConfig',
+    'community.apps.CommunityConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -139,4 +139,4 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-OPENAI_API_KEY = "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" # because openai removes it if exposed
+OPENAI_API_KEY = "sk-proj-DiGFuUwML3elofKRG7nQT3BlbkFJPmkSkfpk6PTRv1Apgilm" # because openai removes it if exposed

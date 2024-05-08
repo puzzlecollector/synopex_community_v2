@@ -177,7 +177,7 @@
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div id="user_profile_nav">
-                <a href="{% url 'aiphabtc:profile_detail' profile.user.id %}" class="user_nav_link">유저 프로필</a>
+                <a href="{% url 'community:profile_detail' profile.user.id %}" class="user_nav_link">유저 프로필</a>
                 <a href="{% url 'common:user_questions' profile.user.id %}" class="user_nav_link">유저 포스트</a>
                 <a href="{% url 'common:user_answers' profile.user.id %}" class="user_nav_link">유저 답글</a>
                 <a href="{% url 'common:user_comments' profile.user.id %}" class="user_nav_link">유저 댓글</a>
@@ -196,7 +196,7 @@
                         <tr>
                             <td>{{ answer.content|truncatewords:10|safe }}</td>
                             <td>{{ answer.create_date | date:"Y-m-d H:i" }}</td>
-                            <td><a href="{% url 'aiphabtc:detail' answer.question.id %}" class="question-link">{{ answer.question.subject }}</a></td>
+                            <td><a href="{% url 'community:detail' answer.question.id %}" class="question-link">{{ answer.question.subject }}</a></td>
                         </tr>
                         {% empty %}
                         <tr>
